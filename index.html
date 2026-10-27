@@ -1744,22 +1744,19 @@ async function syncCloudVoteCounts() {
   if (!client) return;
 
   try {
-    const { data, error } = await client
-      .from("debate_votes")
-      .select("debate_id,side,user_id");
+    // The RPC returns aggregate totals only, never voter IDs.
+    const { data, error } = await client.rpc("debateus_vote_totals");
     if (error) throw error;
     if (!Array.isArray(data)) return;
 
     const counts = new Map();
-    const myVotes = new Map();
-    const userId = state.current?.authId || null;
     for (const row of data) {
       const id = String(row.debate_id || "");
-      const side = String(row.side || "").toUpperCase();
-      if (!id || (side !== "A" && side !== "B")) continue;
-      if (!counts.has(id)) counts.set(id, { A: 0, B: 0 });
-      counts.get(id)[side] += 1;
-      if (userId && row.user_id === userId) myVotes.set(id, side);
+      if (!id) continue;
+      counts.set(id, {
+        A: Number(row.votes_a || 0),
+        B: Number(row.votes_b || 0)
+      });
     }
 
     for (const debate of state.debates) {
@@ -1767,8 +1764,6 @@ async function syncCloudVoteCounts() {
       const count = counts.get(String(debate.cloudId)) || { A: 0, B: 0 };
       debate.votesA = count.A;
       debate.votesB = count.B;
-      const savedVote = myVotes.get(String(debate.cloudId));
-      if (savedVote) state.votes[String(debate.cloudId)] = savedVote;
     }
     saveState();
     renderAllPages();
