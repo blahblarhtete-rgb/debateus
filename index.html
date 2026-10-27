@@ -1733,8 +1733,48 @@ async function syncDebatesFromCloud() {
     saveState();
     renderAllPages();
     updateStats();
+    await syncCloudVoteCounts();
   } catch (error) {
     console.warn("DebateUs cloud debate load failed:", error);
+  }
+}
+
+async function syncCloudVoteCounts() {
+  const client = getDebateCloudClient();
+  if (!client) return;
+
+  try {
+    const { data, error } = await client
+      .from("debate_votes")
+      .select("debate_id,side,user_id");
+    if (error) throw error;
+    if (!Array.isArray(data)) return;
+
+    const counts = new Map();
+    const myVotes = new Map();
+    const userId = state.current?.authId || null;
+    for (const row of data) {
+      const id = String(row.debate_id || "");
+      const side = String(row.side || "").toUpperCase();
+      if (!id || (side !== "A" && side !== "B")) continue;
+      if (!counts.has(id)) counts.set(id, { A: 0, B: 0 });
+      counts.get(id)[side] += 1;
+      if (userId && row.user_id === userId) myVotes.set(id, side);
+    }
+
+    for (const debate of state.debates) {
+      if (!debate.cloudId) continue;
+      const count = counts.get(String(debate.cloudId)) || { A: 0, B: 0 };
+      debate.votesA = count.A;
+      debate.votesB = count.B;
+      const savedVote = myVotes.get(String(debate.cloudId));
+      if (savedVote) state.votes[String(debate.cloudId)] = savedVote;
+    }
+    saveState();
+    renderAllPages();
+    updateStats();
+  } catch (error) {
+    console.warn("DebateUs cloud vote totals could not be loaded:", error);
   }
 }
 
@@ -2036,37 +2076,88 @@ function updateStats() {
 
 /* ---------- VOTING ---------- */
 
-function voteDebate(debateId, side) {
+async function voteDebate(debateId, side) {
   const debate = getDebateById(debateId);
-
   if (!debate) return;
   if (debate.ended) {
     toast("This debate has ended.");
     return;
   }
+  if (side !== "A" && side !== "B") return;
 
+  const client = getDebateCloudClient();
+  const cloudId = debate.cloudId || null;
+  const userId = state.current?.authId || null;
+
+  if (cloudId && (!client || !userId)) {
+    toast("Sign in to vote on community debates.");
+    return;
+  }
   if (!state.current) {
-    toast("Create a local profile or sign in before voting.");
+    toast("Create a profile or sign in before voting.");
     return;
   }
 
-  if (state.votes[debateId]) {
+  const voteKey = cloudId || debateId;
+  if (state.votes[voteKey]) {
     toast("You've already voted on this debate.");
     return;
   }
 
-  if (side !== "A" && side !== "B") return;
+  if (cloudId) {
+    try {
+      const { data: existing, error: checkError } = await client
+        .from("debate_votes")
+        .select("id,side")
+        .eq("debate_id", cloudId)
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+      if (existing) {
+        state.votes[voteKey] = String(existing.side || "").toUpperCase();
+        saveState();
+        await syncCloudVoteCounts();
+        toast("You've already voted on this debate.");
+        return;
+      }
+
+      const { error: insertError } = await client
+        .from("debate_votes")
+        .insert({ debate_id: cloudId, user_id: userId, side: side.toLowerCase() });
+
+      if (insertError) throw insertError;
+
+      state.votes[voteKey] = side;
+      saveState();
+      await syncCloudVoteCounts();
+      renderDebates();
+      renderHome();
+      renderExplore();
+      toast("Your vote has been saved for the community!");
+      return;
+    } catch (error) {
+      console.error("DebateUs shared vote failed:", error);
+      const message = String(error?.message || "");
+      if (/duplicate|unique constraint|already exists/i.test(message)) {
+        state.votes[voteKey] = side;
+        saveState();
+        await syncCloudVoteCounts();
+        toast("You've already voted on this debate.");
+      } else {
+        toast("Vote wasn't saved online: " + (message || "check vote-table permissions."));
+      }
+      return;
+    }
+  }
 
   if (side === "A") debate.votesA = Number(debate.votesA || 0) + 1;
   else debate.votesB = Number(debate.votesB || 0) + 1;
-
-  state.votes[debateId] = side;
+  state.votes[voteKey] = side;
   saveState();
-
   renderDebates();
   renderHome();
   renderExplore();
-
   toast("Your vote has been counted!");
 }
 
