@@ -1685,7 +1685,90 @@ function getVotePercentages(debate) {
 }
 
 function getDebateById(id) {
-  return state.debates.find(debate => debate.id === id);
+  return state.debates.find(debate => debate.id === id || debate.cloudId === id);
+}
+
+/* ---------- SUPABASE SHARED DEBATES ---------- */
+function getDebateCloudClient() {
+  return window.debateUsSupabase || null;
+}
+
+function mapCloudDebate(row) {
+  const createdAt = row.created_at ? new Date(row.created_at).getTime() : Date.now();
+  return {
+    id: String(row.id),
+    cloudId: String(row.id),
+    title: String(row.title || "Untitled debate"),
+    description: String(row.description || row.opening || ""),
+    category: String(row.category || "Other"),
+    sideA: String(row.side_a || "For"),
+    sideB: String(row.side_b || "Against"),
+    votesA: Number(row.votes_a || 0),
+    votesB: Number(row.votes_b || 0),
+    author: String(row.username || row.author_name || "Community member"),
+    authorId: row.creator_id || row.author_id || null,
+    createdAt,
+    ended: String(row.status || "open").toLowerCase() === "ended" || row.status === "closed"
+  };
+}
+
+async function syncDebatesFromCloud() {
+  const client = getDebateCloudClient();
+  if (!client) return;
+  try {
+    const { data, error } = await client
+      .from("debates")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) throw error;
+    if (!Array.isArray(data)) return;
+
+    const remote = data.map(mapCloudDebate);
+    const remoteIds = new Set(remote.map(debate => String(debate.cloudId)));
+    const localOnly = state.debates.filter(debate =>
+      !debate.cloudId && !remoteIds.has(String(debate.id))
+    );
+    state.debates = [...remote, ...localOnly];
+    saveState();
+    renderAllPages();
+    updateStats();
+  } catch (error) {
+    console.warn("DebateUs cloud debate load failed:", error);
+  }
+}
+
+async function publishDebateToCloud(debate) {
+  const client = getDebateCloudClient();
+  const userId = state.current?.authId;
+  if (!client || !userId) return { ok: false, reason: "not-connected" };
+
+  const payload = {
+    title: debate.title,
+    description: debate.description || "",
+    opening: debate.description || "",
+    category: debate.category || "Other",
+    side_a: debate.sideA,
+    side_b: debate.sideB,
+    status: "open",
+    author_id: userId,
+    creator_id: userId
+  };
+
+  const { data, error } = await client
+    .from("debates")
+    .insert(payload)
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("DebateUs cloud debate publish failed:", error);
+    return { ok: false, reason: error.message || "Database rejected the debate." };
+  }
+
+  const saved = mapCloudDebate(data);
+  Object.assign(debate, saved);
+  return { ok: true, debate };
 }
 
 
@@ -2142,8 +2225,8 @@ if (createDebateForm) {
       return;
     }
 
-    state.debates.push({
-      id: "debate-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+    const newDebate = {
+      id: "local-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
       title,
       description,
       category,
@@ -2152,10 +2235,12 @@ if (createDebateForm) {
       votesA: 0,
       votesB: 0,
       author: state.current.username,
+      authorId: state.current.authId || null,
       createdAt: Date.now(),
       ended: false
-    });
+    };
 
+    state.debates.unshift(newDebate);
     saveState();
     createDebateForm.reset();
     document.getElementById("createDialog")?.close();
@@ -2165,7 +2250,24 @@ if (createDebateForm) {
     renderExplore();
     showPage("debates");
 
-    toast("Your debate has been published!");
+    if (state.current.authId && window.debateUsSupabase) {
+      toast("Publishing your debate to the community…");
+      publishDebateToCloud(newDebate).then(result => {
+        if (result.ok) {
+          saveState();
+          renderAllPages();
+          updateStats();
+          toast("Your debate is live for the community!");
+        } else {
+          toast("Saved on this device, but cloud publishing failed: " + result.reason);
+        }
+      }).catch(error => {
+        console.error("DebateUs publish error:", error);
+        toast("Saved on this device, but cloud publishing failed.");
+      });
+    } else {
+      toast("Your debate has been saved on this device.");
+    }
   });
 }
 
@@ -3106,6 +3208,7 @@ renderAllPages();
     state.current = user;
     refreshWebsite();
     updateAccountNavigation();
+    if (typeof syncDebatesFromCloud === "function") syncDebatesFromCloud();
   }
   function setAuthMode(mode) {
     authMode = mode;
@@ -3439,6 +3542,7 @@ renderAllPages();
 
   updateAccountNavigation();
   renderRooms();
+  if (typeof syncDebatesFromCloud === "function") syncDebatesFromCloud();
 
   // Keep the sign-in button and profile display in sync when navigation changes.
   document.addEventListener("click", function () {
