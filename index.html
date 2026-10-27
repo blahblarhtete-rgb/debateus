@@ -1600,7 +1600,10 @@ function loadState() {
       votes: saved.votes && typeof saved.votes === "object" ? saved.votes : {},
       liveVotes: saved.liveVotes && typeof saved.liveVotes === "object" ? saved.liveVotes : {},
       preferences: Array.isArray(saved.preferences) ? saved.preferences : [],
-      xp: saved.xp && typeof saved.xp === "object" ? saved.xp : {}
+      xp: saved.xp && typeof saved.xp === "object" ? saved.xp : {},
+      current: typeof saved.current === "string"
+        ? (Array.isArray(saved.users) ? saved.users.find(user => user.username === saved.current) || null : null)
+        : saved.current
     };
   } catch (error) {
     console.error("Could not load saved DebateUs data:", error);
@@ -3128,7 +3131,7 @@ renderAllPages();
       );
 
       if (existing) {
-        state.current = existing.username;
+        state.current = existing;
         safeToast("Welcome back, " + (existing.displayName || existing.username) + "!");
       } else {
         const newUser = {
@@ -3143,7 +3146,7 @@ renderAllPages();
         };
 
         state.users.push(newUser);
-        state.current = username;
+        state.current = newUser;
         safeToast("Your demo profile is ready!");
       }
 
