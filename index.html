@@ -883,7 +883,7 @@ footer strong {
     </nav>
 
     <div class="header-actions">
-      <button type="button" class="btn btn-small" id="authOpen">Sign in</button>
+      <button type="button" class="btn btn-small" id="authOpen" onclick="(function(){var d=document.getElementById('authDialog');if(!d)return;if(typeof d.showModal==='function'){try{d.showModal();return;}catch(e){}}d.setAttribute('open','open');d.style.position='fixed';d.style.zIndex='9999';})()">Sign in</button>
       <button class="btn btn-primary btn-small" data-action="new-debate">+ Debate</button>
     </div>
   </div>
@@ -2719,7 +2719,8 @@ function renderProfile() {
   const container = document.getElementById("profileContent");
   if (!container) return;
 
-  if (!state.current) {
+  if (!state.current || typeof state.current !== "object" || !state.current.username) {
+    state.current = null;
     container.innerHTML = `
       <div class="card">
         <h2>Welcome to DebateUs</h2>
@@ -3047,9 +3048,13 @@ renderAllPages();
 
   function openDialog(id) {
     const dialog = byId(id);
-    if (dialog && typeof dialog.showModal === "function" && !dialog.open) {
-      dialog.showModal();
+    if (!dialog || dialog.open) return;
+    if (typeof dialog.showModal === "function") {
+      try { dialog.showModal(); return; } catch (error) { /* use visible fallback */ }
     }
+    dialog.setAttribute("open", "open");
+    dialog.style.position = "fixed";
+    dialog.style.zIndex = "9999";
   }
 
   function closeDialog(id) {
