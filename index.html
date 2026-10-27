@@ -1712,6 +1712,60 @@ function mapCloudDebate(row) {
   };
 }
 
+async function syncProfileFromCloud() {
+  const client = getDebateCloudClient();
+  const userId = state.current?.authId;
+  if (!client || !userId) return;
+
+  try {
+    const { data, error } = await client
+      .from("debateus_profiles")
+      .select("user_id,username,display_name,bio,created_at")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) throw error;
+
+    if (data) {
+      state.current.username = String(data.username || state.current.username);
+      state.current.displayName = String(data.display_name || data.username || state.current.username);
+      state.current.bio = String(data.bio || "");
+      state.current.joinedAt = data.created_at || state.current.joinedAt;
+      const index = state.users.findIndex(user => user.authId === userId);
+      if (index >= 0) state.users[index] = { ...state.users[index], ...state.current };
+      saveState();
+      renderProfile();
+      refreshWebsite();
+    } else {
+      await saveProfileToCloud();
+    }
+  } catch (error) {
+    console.warn("DebateUs shared profile load failed:", error);
+    toast("Couldn't load your shared profile yet. Check the profile database setup.");
+  }
+}
+
+async function saveProfileToCloud() {
+  const client = getDebateCloudClient();
+  const user = state.current;
+  if (!client || !user?.authId) return { ok: false, reason: "not-signed-in" };
+
+  const payload = {
+    user_id: user.authId,
+    username: String(user.username || "debater"),
+    display_name: String(user.displayName || user.username || "debater"),
+    bio: String(user.bio || "")
+  };
+
+  const { error } = await client
+    .from("debateus_profiles")
+    .upsert(payload, { onConflict: "user_id" });
+  if (error) {
+    console.warn("DebateUs shared profile save failed:", error);
+    return { ok: false, reason: error.message || "database-error" };
+  }
+  return { ok: true };
+}
+
 async function syncDebatesFromCloud() {
   const client = getDebateCloudClient();
   if (!client) return;
@@ -2957,7 +3011,7 @@ function renderProfile() {
   renderAchievements();
 }
 
-function saveProfile(event) {
+async function saveProfile(event) {
   event.preventDefault();
 
   if (!state.current) return;
@@ -2968,11 +3022,25 @@ function saveProfile(event) {
   state.current.displayName = displayName || state.current.username;
   state.current.bio = bio;
 
+  const userIndex = Array.isArray(state.users)
+    ? state.users.findIndex(user => user.authId === state.current.authId)
+    : -1;
+  if (userIndex >= 0) state.users[userIndex] = { ...state.users[userIndex], ...state.current };
+
   saveState();
   document.getElementById("editProfileDialog")?.close();
   renderProfile();
 
-  toast("Profile updated!");
+  if (state.current.authId) {
+    const result = await saveProfileToCloud();
+    if (!result.ok) {
+      toast("Saved on this device, but online profile save failed: " + (result.reason || "unknown error"));
+      return;
+    }
+    toast("Profile updated for the community!");
+  } else {
+    toast("Profile updated on this device.");
+  }
 }
 
 document.getElementById("editProfileForm")?.addEventListener("submit", saveProfile);
@@ -3294,6 +3362,7 @@ renderAllPages();
     state.current = user;
     refreshWebsite();
     updateAccountNavigation();
+    if (typeof syncProfileFromCloud === "function") syncProfileFromCloud();
     if (typeof syncDebatesFromCloud === "function") syncDebatesFromCloud();
   }
   function setAuthMode(mode) {
