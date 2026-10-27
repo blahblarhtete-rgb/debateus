@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#0c0b14">
 <meta name="description" content="DebateUs — Share your view, back it up, and respect the person.">
 <title>DebateUs — Make Your Point</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 :root {
@@ -883,7 +884,7 @@ footer strong {
     </nav>
 
     <div class="header-actions">
-      <button type="button" class="btn btn-small" id="authOpen" onclick="(function(){var d=document.getElementById('authDialog');if(!d)return;if(typeof d.showModal==='function'){try{d.showModal();return;}catch(e){}}d.setAttribute('open','open');d.style.position='fixed';d.style.zIndex='9999';})()">Sign in</button>
+      <button type="button" class="btn btn-small" id="authOpen">Sign in</button>
       <button class="btn btn-primary btn-small" data-action="new-debate">+ Debate</button>
     </div>
   </div>
@@ -1416,6 +1417,12 @@ footer strong {
    Core data, navigation, debates, voting,
    community, and mini-games
 ========================================= */
+
+window.debateUsSupabase = window.supabase.createClient(
+  "https://wptkpcqvymaexuedphdv.supabase.co",
+  "sb_publishable_sNx7Lf5xc1nNRpAf9ozGEA_zONWrdHI",
+  { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }
+);
 
 const CATEGORIES = [
   "All",
@@ -2997,175 +3004,236 @@ renderAllPages();
 <dialog id="authDialog" class="app-dialog">
   <div class="dialog-header">
     <div>
-      <h2 id="authHeading">Join DebateUs</h2>
-      <p>Create a local demo profile or sign in to one on this browser.</p>
+      <h2 id="authHeading">Create your DebateUs account</h2>
+      <p id="authDescription">Sign up with your email to join the community.</p>
     </div>
     <button type="button" data-close="authDialog" aria-label="Close">✕</button>
   </div>
-
-  <form id="authForm" class="dialog-form">
-    <label for="authUsername">Username</label>
-    <input id="authUsername" name="username" maxlength="24" required
-      autocomplete="username" placeholder="Choose a username">
-
-    <label for="authDisplayName">Display name</label>
-    <input id="authDisplayName" name="displayName" maxlength="40"
-      placeholder="What should people call you?">
-
-    <p class="muted">
-      Demo only: this doesn't create a secure online account or sync across devices.
-      Don't enter a real password.
-    </p>
-
-    <button type="submit" class="primary-button">Continue</button>
+  <form id="authForm" class="dialog-form" data-mode="signup">
+    <label for="authEmail">Email address</label>
+    <input id="authEmail" name="email" type="email" required autocomplete="email" placeholder="you@example.com">
+    <label for="authPassword">Password</label>
+    <input id="authPassword" name="password" type="password" required minlength="6" autocomplete="new-password" placeholder="At least 6 characters">
+    <div id="authSignupFields">
+      <label for="authUsername">Username</label>
+      <input id="authUsername" name="username" maxlength="24" autocomplete="username" placeholder="Choose a username">
+      <label for="authDisplayName">Display name</label>
+      <input id="authDisplayName" name="displayName" maxlength="40" placeholder="What should people call you?">
+    </div>
+    <p id="authMessage" class="muted" aria-live="polite">Use an email address you can access so you can verify your account.</p>
+    <button type="submit" id="authSubmit" class="primary-button">Create account</button>
+    <button type="button" id="authModeToggle" class="btn">Already have an account? Sign in</button>
+    <button type="button" id="authForgotPassword" class="btn">Forgot password?</button>
   </form>
 </dialog>
 
 <script>
-/* ---------- PART 4: LOCAL DEMO ACCOUNTS ---------- */
-
+/* ---------- PART 4: SUPABASE EMAIL ACCOUNTS ---------- */
 (function () {
   "use strict";
-
   const byId = id => document.getElementById(id);
+  const auth = window.debateUsSupabase;
+  let authMode = "signup";
 
   function safeToast(message) {
-    if (typeof toast === "function") {
-      toast(message);
-      return;
-    }
-
-    const container = byId("toastContainer");
-    if (!container) {
-      alert(message);
-      return;
-    }
-
-    container.textContent = message;
-    container.classList.add("visible");
-    setTimeout(() => container.classList.remove("visible"), 2600);
+    if (typeof toast === "function") toast(message);
+    else alert(message);
   }
-
   function openDialog(id) {
     const dialog = byId(id);
     if (!dialog || dialog.open) return;
     if (typeof dialog.showModal === "function") {
-      try { dialog.showModal(); return; } catch (error) { /* use visible fallback */ }
+      try { dialog.showModal(); return; } catch (error) {}
     }
     dialog.setAttribute("open", "open");
     dialog.style.position = "fixed";
     dialog.style.zIndex = "9999";
   }
-
   function closeDialog(id) {
     const dialog = byId(id);
-    if (dialog && dialog.open) dialog.close();
+    if (!dialog) return;
+    if (typeof dialog.close === "function" && dialog.open) dialog.close();
+    else dialog.removeAttribute("open");
   }
-
-  function getUsername() {
-    return typeof getCurrentUsername === "function"
-      ? getCurrentUsername()
-      : (state && state.current) || null;
-  }
-
-  function getUser() {
-    if (!state || !Array.isArray(state.users)) return null;
-    const username = getUsername();
-    return state.users.find(user =>
-      String(user.username).toLowerCase() === String(username || "").toLowerCase()
-    ) || null;
-  }
-
   function refreshWebsite() {
     if (typeof saveState === "function") saveState();
     if (typeof renderAllPages === "function") renderAllPages();
     if (typeof updateStats === "function") updateStats();
+    if (typeof renderProfile === "function") renderProfile();
   }
-
+  function safeUsername(value) {
+    return String(value || "").toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 24);
+  }
   function updateAccountNavigation() {
     const nav = byId("authOpen");
     if (!nav) return;
-    const user = getUser();
-    nav.textContent = user ? "Sign out" : "Sign in";
-    nav.setAttribute("aria-label", user
-      ? "Sign out of your demo profile"
-      : "Sign in to DebateUs");
+    const signedIn = Boolean(state && state.current && state.current.authId);
+    nav.textContent = signedIn ? "Sign out" : "Sign in";
+    nav.setAttribute("aria-label", signedIn ? "Sign out of DebateUs" : "Sign in to DebateUs");
+  }
+  function applyAuthUser(authUser) {
+    if (!authUser) {
+      state.current = null;
+      if (typeof saveState === "function") saveState();
+      refreshWebsite();
+      updateAccountNavigation();
+      return;
+    }
+    const metadata = authUser.user_metadata || {};
+    const emailName = (authUser.email || "debateus_user").split("@")[0];
+    let username = safeUsername(metadata.username) || safeUsername(emailName) || "debater";
+    if (username.length < 2) username = "debater" + String(authUser.id || "").slice(0, 5);
+    const existing = Array.isArray(state.users)
+      ? state.users.find(u => u.authId === authUser.id)
+      : null;
+    const user = {
+      ...(existing || {}),
+      authId: authUser.id,
+      email: authUser.email || "",
+      username,
+      displayName: String(metadata.display_name || existing?.displayName || username).slice(0, 40),
+      bio: existing?.bio || "",
+      joinedAt: existing?.joinedAt || authUser.created_at || new Date().toISOString(),
+      xp: Number(existing?.xp || 0),
+      achievements: existing?.achievements || [],
+      following: existing?.following || [],
+      followers: existing?.followers || []
+    };
+    if (!Array.isArray(state.users)) state.users = [];
+    const index = state.users.findIndex(u => u.authId === authUser.id);
+    if (index >= 0) state.users[index] = user;
+    else state.users.push(user);
+    state.current = user;
+    refreshWebsite();
+    updateAccountNavigation();
+  }
+  function setAuthMode(mode) {
+    authMode = mode;
+    const signup = mode === "signup";
+    const form = byId("authForm");
+    if (form) form.dataset.mode = mode;
+    byId("authHeading").textContent = signup ? "Create your DebateUs account" : "Welcome back";
+    byId("authDescription").textContent = signup ? "Sign up with your email to join the community." : "Sign in to your existing DebateUs account.";
+    byId("authSignupFields").hidden = !signup;
+    byId("authUsername").required = signup;
+    byId("authPassword").autocomplete = signup ? "new-password" : "current-password";
+    byId("authSubmit").textContent = signup ? "Create account" : "Sign in";
+    byId("authModeToggle").textContent = signup ? "Already have an account? Sign in" : "New to DebateUs? Create an account";
+    byId("authForgotPassword").hidden = signup;
+    byId("authMessage").textContent = signup ? "Use an email address you can access so you can verify your account." : "Enter the email address and password for your account.";
+  }
+  function getUser() {
+    return state && state.current && state.current.authId ? state.current : null;
   }
 
-  // One click handler controls both sign-in and sign-out.
-  const accountButton = byId("authOpen");
-  accountButton?.addEventListener("click", function (event) {
+  byId("authOpen")?.addEventListener("click", async function (event) {
     event.preventDefault();
     if (getUser()) {
+      const { error } = await auth.auth.signOut();
+      if (error) { safeToast("Couldn't sign out: " + error.message); return; }
       state.current = null;
       refreshWebsite();
       updateAccountNavigation();
-      safeToast("You have signed out of this browser.");
+      safeToast("You've signed out of DebateUs.");
     } else {
+      setAuthMode("signup");
       openDialog("authDialog");
     }
   });
 
-  // Refresh the profile view whenever the Profile tab is selected.
   document.addEventListener("click", function (event) {
-    if (event.target.closest('[data-page="profile"]') && typeof renderProfile === "function") {
-      renderProfile();
-    }
+    if (event.target.closest('[data-page="profile"]') && typeof renderProfile === "function") renderProfile();
   });
 
   const authForm = byId("authForm");
-
-  if (authForm) {
-    authForm.addEventListener("submit", function (event) {
-      event.preventDefault();
-
-      const usernameInput = byId("authUsername");
-      const displayInput = byId("authDisplayName");
-
-      const username = (usernameInput?.value || "")
-        .trim()
-        .replace(/\s+/g, "")
-        .slice(0, 24);
-
-      const displayName = (displayInput?.value || username)
-        .trim()
-        .slice(0, 40) || username;
-
-      if (!/^[a-zA-Z0-9_-]{2,24}$/.test(username)) {
-        safeToast("Use 2–24 letters, numbers, underscores or hyphens.");
-        return;
-      }
-
-      const existing = state.users.find(user =>
-        String(user.username).toLowerCase() === username.toLowerCase()
-      );
-
-      if (existing) {
-        state.current = existing;
-        safeToast("Welcome back, " + (existing.displayName || existing.username) + "!");
+  authForm?.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    if (!auth) { safeToast("Authentication couldn't load. Refresh the page and try again."); return; }
+    const email = byId("authEmail").value.trim();
+    const password = byId("authPassword").value;
+    const username = safeUsername(byId("authUsername").value.trim());
+    const displayName = byId("authDisplayName").value.trim().slice(0, 40) || username;
+    const submit = byId("authSubmit");
+    const message = byId("authMessage");
+    if (!email || !password) { message.textContent = "Enter your email address and password."; return; }
+    if (password.length < 6) { message.textContent = "Your password must be at least 6 characters."; return; }
+    if (authMode === "signup" && !/^[a-zA-Z0-9_-]{2,24}$/.test(username)) {
+      message.textContent = "Use a username with 2–24 letters, numbers, underscores or hyphens."; return;
+    }
+    submit.disabled = true;
+    submit.textContent = authMode === "signup" ? "Creating account…" : "Signing in…";
+    message.textContent = "Connecting securely…";
+    try {
+      if (authMode === "signup") {
+        const { data, error } = await auth.auth.signUp({
+          email, password,
+          options: {
+            data: { username, display_name: displayName },
+            emailRedirectTo: window.location.origin + window.location.pathname
+          }
+        });
+        if (error) throw error;
+        if (data.session && data.user) {
+          applyAuthUser(data.user);
+          closeDialog("authDialog");
+          authForm.reset();
+          safeToast("Your DebateUs account is ready!");
+        } else {
+          message.textContent = "Account created. Check your inbox and spam folder for the verification email, then return here to sign in.";
+          byId("authPassword").value = "";
+          safeToast("Check your email to verify your account.");
+          setAuthMode("signin");
+        }
       } else {
-        const newUser = {
-          username: username,
-          displayName: displayName,
-          bio: "",
-          joinedAt: new Date().toISOString(),
-          xp: 0,
-          achievements: [],
-          following: [],
-          followers: []
-        };
-
-        state.users.push(newUser);
-        state.current = newUser;
-        safeToast("Your demo profile is ready!");
+        const { data, error } = await auth.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        if (data.user) applyAuthUser(data.user);
+        closeDialog("authDialog");
+        authForm.reset();
+        safeToast("Welcome back to DebateUs!");
       }
+    } catch (error) {
+      message.textContent = error && error.message ? error.message : "Something went wrong. Please try again.";
+    } finally {
+      submit.disabled = false;
+      submit.textContent = authMode === "signup" ? "Create account" : "Sign in";
+    }
+  });
 
+  byId("authModeToggle")?.addEventListener("click", () => setAuthMode(authMode === "signup" ? "signin" : "signup"));
+  byId("authForgotPassword")?.addEventListener("click", async function () {
+    const email = byId("authEmail").value.trim();
+    const message = byId("authMessage");
+    if (!email) {
+      message.textContent = "Enter your email address first, then click Forgot password again.";
+      byId("authEmail").focus();
+      return;
+    }
+    const { error } = await auth.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + window.location.pathname
+    });
+    message.textContent = error
+      ? "Couldn't send the reset email: " + error.message
+      : "If an account exists for that email, a password reset link should arrive shortly. Check spam too.";
+  });
+
+  auth.auth.onAuthStateChange((event, session) => {
+    if (session?.user) applyAuthUser(session.user);
+    else if (event === "SIGNED_OUT") applyAuthUser(null);
+  });
+  auth.auth.getSession().then(({ data, error }) => {
+    if (error) { console.error("Supabase session restore failed:", error); return; }
+    if (data.session?.user) applyAuthUser(data.session.user);
+    else {
+      state.current = null;
       refreshWebsite();
       updateAccountNavigation();
-      closeDialog("authDialog");
-      authForm.reset();
-    });
-  }
+    }
+  });
+
+  if (!state.current || !state.current.authId) state.current = null;
+  setAuthMode("signup");
+  updateAccountNavigation();
 
   /* ---------- LIVE ARENA: LOCAL ROOMS ---------- */
 
