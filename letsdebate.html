@@ -1,0 +1,3370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0c0b14">
+<meta name="description" content="DebateUs — Share your view, back it up, and respect the person.">
+<title>DebateUs — Make Your Point</title>
+
+<style>
+:root {
+  --bg: #0c0b14;
+  --panel: #171424;
+  --panel2: #211c32;
+  --line: #352d4b;
+  --purple: #a78bfa;
+  --pink: #ff78b7;
+  --cyan: #6ee7f5;
+  --green: #74e0b0;
+  --text: #f7f4ff;
+  --muted: #aaa3c0;
+  --danger: #ff7474;
+  --radius: 18px;
+  --shadow: 0 12px 35px #00000035;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 100px;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 10% 0%, #8b5cf718, transparent 35%),
+    radial-gradient(ellipse at 95% 15%, #ff78b70c, transparent 30%),
+    var(--bg);
+  color: var(--text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.6;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+}
+
+a {
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+img {
+  max-width: 100%;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* HEADER */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #0c0b14eF;
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--line);
+}
+
+.topbar-inner {
+  max-width: 1440px;
+  margin: auto;
+  padding: 12px 22px;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  color: var(--text);
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: -.6px;
+}
+
+.brand-mark {
+  width: 39px;
+  height: 39px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: linear-gradient(135deg, var(--purple), var(--pink));
+  color: #160e25;
+  font-size: 1.2rem;
+}
+
+.brand span:last-child {
+  background: linear-gradient(100deg, var(--purple), var(--pink));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.nav button {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid transparent;
+  padding: 9px 12px;
+  border-radius: 11px;
+  white-space: nowrap;
+  font-size: .88rem;
+  transition: .2s;
+}
+
+.nav button:hover,
+.nav button.active {
+  background: var(--panel2);
+  border-color: var(--line);
+  color: var(--text);
+}
+
+.nav button.active {
+  box-shadow: inset 0 -2px var(--purple);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* BUTTONS */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel2);
+  color: var(--text);
+  font-weight: 700;
+  transition: transform .18s, border-color .18s, filter .18s;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--purple);
+}
+
+.btn-primary {
+  background: linear-gradient(110deg, var(--purple), var(--pink));
+  color: #170e25;
+  border-color: transparent;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.08);
+  border-color: transparent;
+}
+
+.btn-cyan {
+  background: linear-gradient(110deg, var(--cyan), #a5f3d0);
+  color: #102025;
+  border-color: transparent;
+}
+
+.btn-ghost {
+  background: transparent;
+}
+
+.btn-danger {
+  color: var(--danger);
+}
+
+.btn-small {
+  padding: 6px 10px;
+  border-radius: 9px;
+  font-size: .83rem;
+}
+
+/* PAGE LAYOUT */
+
+.container {
+  width: min(1180px, calc(100% - 36px));
+  margin: 0 auto;
+}
+
+.page {
+  display: none;
+  padding: 34px 0 65px;
+  min-height: 70vh;
+}
+
+.page.active {
+  display: block;
+  animation: appear .25s ease;
+}
+
+@keyframes appear {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.section {
+  margin-top: 38px;
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 17px;
+}
+
+.section-heading h2 {
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  overflow-wrap: anywhere;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  line-height: 1.25;
+}
+
+h1 {
+  font-size: clamp(2.4rem, 6vw, 4.8rem);
+  letter-spacing: -2.5px;
+  margin: 0 0 18px;
+}
+
+h2 {
+  letter-spacing: -.7px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.gradient-text {
+  background: linear-gradient(100deg, var(--purple), var(--pink), var(--cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 11px;
+  border: 1px solid #a78bfa55;
+  border-radius: 999px;
+  background: #a78bfa12;
+  color: var(--purple);
+  font-size: .82rem;
+  font-weight: 800;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  display: inline-block;
+}
+
+/* CARDS AND GRIDS */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 17px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 17px;
+}
+
+.card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(145deg, #1b1729, #14111f);
+  box-shadow: var(--shadow);
+}
+
+.card h3 {
+  margin-top: 0;
+}
+
+.card p:last-child {
+  margin-bottom: 0;
+}
+
+.card-top,
+.card-actions,
+.row-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.card-actions {
+  justify-content: flex-start;
+  margin-top: 15px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #ffffff06;
+  color: var(--muted);
+  font-size: .78rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 35px 20px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--muted);
+}
+
+/* HOME HERO */
+
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(28px, 6vw, 65px);
+  border: 1px solid #a78bfa40;
+  border-radius: 28px;
+  background:
+    radial-gradient(ellipse at 85% 15%, #ff78b71d, transparent 40%),
+    radial-gradient(ellipse at 5% 100%, #6ee7f51a, transparent 45%),
+    linear-gradient(140deg, #211934, #13101e);
+}
+
+.hero::after {
+  content: "✦";
+  position: absolute;
+  z-index: -1;
+  right: 7%;
+  top: 4%;
+  font-size: clamp(8rem, 20vw, 17rem);
+  line-height: 1;
+  color: #a78bfa0b;
+  pointer-events: none;
+}
+
+.hero-copy {
+  max-width: 740px;
+}
+
+.hero-copy > p {
+  max-width: 620px;
+  color: var(--muted);
+  font-size: 1.08rem;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.stat {
+  padding: 17px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: #0c0b1455;
+}
+
+.stat strong {
+  display: block;
+  font-size: 1.7rem;
+}
+
+.stat span {
+  color: var(--muted);
+  font-size: .83rem;
+}
+
+/* FORMS */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.field.full {
+  grid-column: 1 / -1;
+}
+
+label {
+  font-size: .88rem;
+  font-weight: 750;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 11px 13px;
+  color: var(--text);
+  background: #0f0d19;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #777089;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 110px;
+}
+
+select option {
+  background: var(--panel);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.filters > * {
+  flex: 1 1 150px;
+}
+
+.category-list {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 5px 0 12px;
+  scrollbar-width: thin;
+}
+
+.category-chip {
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 8px 13px;
+}
+
+.category-chip:hover,
+.category-chip.active {
+  background: #a78bfa1c;
+  border-color: var(--purple);
+  color: var(--text);
+}
+
+/* DEBATE CARDS */
+
+.debate-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.debate-card h3 {
+  margin: 0;
+}
+
+.debate-card .debate-description {
+  color: var(--muted);
+  font-size: .93rem;
+}
+
+.vote-bar {
+  height: 8px;
+  display: flex;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--panel2);
+}
+
+.vote-bar-a {
+  background: linear-gradient(90deg, var(--purple), #c4b5fd);
+}
+
+.vote-bar-b {
+  background: linear-gradient(90deg, var(--pink), #fda4af);
+}
+
+.vote-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.vote-a {
+  border-color: #a78bfa66;
+}
+
+.vote-b {
+  border-color: #ff78b766;
+}
+
+/* LIVE ARENA */
+
+.live-banner {
+  border: 1px solid #ff78b755;
+  background:
+    radial-gradient(ellipse at 100% 0%, #ff78b71a, transparent 45%),
+    var(--panel);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+
+.live-indicator {
+  color: var(--pink);
+  font-weight: 850;
+}
+
+/* PROFILE */
+
+.profile-avatar {
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  border-radius: 22px;
+  background: linear-gradient(135deg, var(--purple), var(--pink));
+  color: #160e25;
+  font-size: 2rem;
+  font-weight: 900;
+}
+
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 55px 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+/* GAMES */
+
+.game-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 300px;
+}
+
+.game-cell {
+  aspect-ratio: 1;
+  font-size: 1.7rem;
+}
+
+.memory-board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.memory-cell {
+  min-height: 65px;
+  font-size: 1.4rem;
+}
+
+.game-message {
+  min-height: 28px;
+  color: var(--cyan);
+  font-weight: 700;
+}
+
+/* VIDEO */
+
+.video-frame {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #000;
+  overflow: hidden;
+}
+
+.video-frame iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* DIALOGS */
+
+dialog {
+  width: min(620px, calc(100% - 28px));
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 0;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 30px 100px #000a;
+}
+
+dialog::backdrop {
+  background: #05040bd9;
+  backdrop-filter: blur(5px);
+}
+
+.dialog-inner {
+  padding: 23px;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.dialog-header h2 {
+  margin: 0;
+}
+
+.dialog-close {
+  border: 1px solid var(--line);
+  background: var(--panel2);
+  color: var(--text);
+  border-radius: 9px;
+  width: 36px;
+  height: 36px;
+}
+
+/* TOASTS */
+
+.toast-container {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 500;
+  display: grid;
+  gap: 9px;
+  width: min(360px, calc(100% - 36px));
+}
+
+.toast {
+  padding: 13px 16px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #211c32;
+  box-shadow: var(--shadow);
+  animation: appear .2s ease;
+}
+
+/* FOOTER */
+
+footer {
+  border-top: 1px solid var(--line);
+  padding: 24px 18px;
+  text-align: center;
+  color: var(--muted);
+  font-size: .88rem;
+}
+
+footer strong {
+  color: var(--text);
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 1050px) {
+  .topbar-inner {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .nav {
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  .header-actions {
+    margin-left: auto;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .container {
+    width: calc(100% - 24px);
+  }
+
+  .topbar-inner {
+    padding: 10px 12px;
+  }
+
+  .brand {
+    font-size: 1.08rem;
+  }
+
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+  }
+
+  .nav button {
+    padding: 8px 10px;
+    font-size: .82rem;
+  }
+
+  .header-actions .btn {
+    padding: 8px 10px;
+    font-size: .82rem;
+  }
+
+  .page {
+    padding-top: 23px;
+  }
+
+  .hero {
+    padding: 26px 20px;
+    border-radius: 20px;
+  }
+
+  h1 {
+    letter-spacing: -1.4px;
+  }
+
+  .grid,
+  .grid-2,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .field.full {
+    grid-column: auto;
+  }
+
+  .stats-grid {
+    gap: 8px;
+  }
+
+  .stat {
+    padding: 11px;
+  }
+
+  .stat strong {
+    font-size: 1.35rem;
+  }
+
+  .stat span {
+    font-size: .72rem;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .leaderboard-row {
+    grid-template-columns: 35px 1fr auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#" data-page="home" aria-label="DebateUs home">
+      <span class="brand-mark">✦</span>
+      <span>DebateUs</span>
+    </a>
+
+    <nav class="nav" aria-label="Main navigation">
+      <button class="active" data-page="home">Home</button>
+      <button data-page="explore">Explore</button>
+      <button data-page="debates">Debates</button>
+      <button data-page="community">Community</button>
+      <button data-page="lounge">🎮 Lounge</button>
+      <button data-page="watch">Watch Hub</button>
+      <button data-page="arena">🔴 Live Arena</button>
+      <button data-page="leaderboard">Leaderboard</button>
+      <button data-page="notifications">Notifications</button>
+      <button data-page="profile">Profile</button>
+    </nav>
+
+    <div class="header-actions">
+      <button class="btn btn-small" id="authOpen">Sign in</button>
+      <button class="btn btn-primary btn-small" data-action="new-debate">+ Debate</button>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- HOME -->
+
+  <section class="page active" id="page-home">
+    <div class="hero">
+      <div class="hero-copy">
+        <span class="eyebrow"><span class="dot"></span> Your voice belongs here</span>
+        <h1>Good arguments.<br><span class="gradient-text">Better conversations.</span></h1>
+        <p>
+          Make your point. Back it up. Discover new perspectives, challenge
+          ideas, and find people who love a good debate.
+        </p>
+
+        <div class="hero-actions">
+          <button class="btn btn-primary" data-page="debates">Explore debates ↗</button>
+          <button class="btn btn-cyan" data-page="arena">Enter Live Arena</button>
+          <button class="btn btn-ghost" data-page="community">Join the community</button>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat">
+            <strong id="statDebates">0</strong>
+            <span>Debates available</span>
+          </div>
+          <div class="stat">
+            <strong id="statVotes">0</strong>
+            <span>Votes recorded</span>
+          </div>
+          <div class="stat">
+            <strong id="statUsers">0</strong>
+            <span>Local profiles</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">🔥 Worth discussing</span>
+          <h2>Trending debates</h2>
+        </div>
+        <button class="btn" data-page="debates">Browse all →</button>
+      </div>
+      <div class="grid" id="homeTrending"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">✨ Find your next argument</span>
+          <h2>Explore by interest</h2>
+        </div>
+      </div>
+      <div class="category-list" id="homeCategories"></div>
+    </section>
+
+    <section class="section">
+      <div class="live-banner">
+        <span class="live-indicator">● LIVE ARENA</span>
+        <h2>Think you can defend your opinion?</h2>
+        <p class="muted">
+          Challenge another debater, present your side, and let the audience
+          decide who made the stronger argument.
+        </p>
+        <button class="btn btn-primary" data-page="arena">Enter the arena →</button>
+      </div>
+    </section>
+  </section>
+
+
+  <!-- EXPLORE -->
+
+  <section class="page" id="page-explore">
+    <div class="section-heading">
+      <div>
+        <span class="eyebrow">✦ Discover something new</span>
+        <h1>Explore <span class="gradient-text">DebateUs</span></h1>
+        <p class="muted">Find trending arguments, fresh topics and challenges.</p>
+      </div>
+      <button class="btn btn-primary" data-action="new-debate">+ Create debate</button>
+    </div>
+
+    <div class="grid">
+      <article class="card">
+        <span class="eyebrow">🔥 Popular today</span>
+        <h3>Today's most popular arguments</h3>
+        <p class="muted">See which topics are attracting the most votes.</p>
+        <button class="btn" data-explore-filter="popular">Explore popular</button>
+      </article>
+
+      <article class="card">
+        <span class="eyebrow">🆕 Fresh ideas</span>
+        <h3>Newly created debates</h3>
+        <p class="muted">Be one of the first people to share an opinion.</p>
+        <button class="btn" data-explore-filter="newest">Explore new</button>
+      </article>
+
+      <article class="card">
+        <span class="eyebrow">🎯 Daily challenge</span>
+        <h3>Take a side</h3>
+        <p class="muted" id="dailyChallengeText">Pick a debate and explain your reasoning.</p>
+        <button class="btn btn-primary" data-action="daily-challenge">Try the challenge</button>
+      </article>
+    </div>
+
+    <section class="section">
+      <div class="section-heading">
+        <h2>Recommended for you</h2>
+      </div>
+      <p class="muted">Choose categories you enjoy to find relevant discussions.</p>
+      <div class="category-list" id="exploreCategories"></div>
+      <div class="grid" id="exploreDebates"></div>
+    </section>
+  </section>
+
+
+  <!-- DEBATES -->
+
+  <section class="page" id="page-debates">
+    <div class="section-heading">
+      <div>
+        <span class="eyebrow">💬 Have your say</span>
+        <h1>Browse <span class="gradient-text">debates</span></h1>
+        <p class="muted">Vote on a side, discover topics, and create your own debate.</p>
+      </div>
+      <button class="btn btn-primary" data-action="new-debate">+ New debate</button>
+    </div>
+
+    <div class="filters">
+      <input id="debateSearch" type="search" placeholder="Search debates..." aria-label="Search debates">
+      <select id="debateSort" aria-label="Sort debates">
+        <option value="popular">Most votes</option>
+        <option value="newest">Newest</option>
+        <option value="title">Title A–Z</option>
+      </select>
+      <select id="debateStatus" aria-label="Filter debate status">
+        <option value="all">All debates</option>
+        <option value="open">Open debates</option>
+        <option value="ended">Ended debates</option>
+      </select>
+    </div>
+
+    <div class="category-list" id="debateCategories"></div>
+    <div class="grid" id="debateList"></div>
+    <div class="empty-state" id="debateEmpty" hidden>
+      <h3>No debates found</h3>
+      <p>Try a different search or category.</p>
+      <button class="btn" data-action="clear-filters">Clear filters</button>
+    </div>
+  </section>
+
+
+  <!-- COMMUNITY -->
+
+  <section class="page" id="page-community">
+    <div class="section-heading">
+      <div>
+        <span class="eyebrow">🌍 The community</span>
+        <h1>Share your <span class="gradient-text">take.</span></h1>
+        <p class="muted">Quick opinions, hot takes, and conversations beyond formal debates.</p>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h2>Drop a hot take</h2>
+        <form id="communityForm">
+          <div class="field">
+            <label for="communityCategory">Category</label>
+            <select id="communityCategory">
+              <option>Everyday Arguments</option>
+              <option>Anime &amp; Manga</option>
+              <option>Gaming</option>
+              <option>Movies &amp; TV</option>
+              <option>Music</option>
+              <option>Sports</option>
+              <option>School &amp; Education</option>
+              <option>Technology</option>
+              <option>Art &amp; Creativity</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          <div class="field" style="margin-top:14px">
+            <label for="communityText">Your opinion</label>
+            <textarea id="communityText" maxlength="600" required
+              placeholder="Unpopular opinion: ..."></textarea>
+          </div>
+
+          <p class="muted">Keep it respectful. Criticise ideas, not people.</p>
+          <button class="btn btn-primary" type="submit">Share post</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Community guidelines</h2>
+        <p>✦ Challenge opinions, not someone's worth.</p>
+        <p>✦ Explain your reasoning where possible.</p>
+        <p>✦ Avoid sharing personal or private information.</p>
+        <p>✦ Report content that appears abusive or unsafe.</p>
+        <p class="muted">Posts in this prototype are stored in this browser only.</p>
+      </div>
+    </div>
+
+    <section class="section">
+      <div class="section-heading">
+        <h2>Community feed</h2>
+      </div>
+      <div id="communityFeed" class="grid"></div>
+    </section>
+  </section>
+
+
+  <!-- LOUNGE -->
+
+  <section class="page" id="page-lounge">
+    <div class="section-heading">
+      <div>
+        <span class="eyebrow">🎮 Take a break</span>
+        <h1>The <span class="gradient-text">Lounge</span></h1>
+        <p class="muted">Play quick mini-games between debates.</p>
+      </div>
+      <div class="pill" id="xpDisplay">0 XP</div>
+    </div>
+
+    <div class="grid">
+      <article class="card">
+        <h3>🪨 Rock Paper Scissors</h3>
+        <p class="muted">Challenge the computer.</p>
+        <div class="card-actions">
+          <button class="btn btn-small" data-rps="Rock">🪨 Rock</button>
+          <button class="btn btn-small" data-rps="Paper">📄 Paper</button>
+          <button class="btn btn-small" data-rps="Scissors">✂️ Scissors</button>
+        </div>
+        <p id="rpsResult" class="game-message"></p>
+      </article>
+
+      <article class="card">
+        <h3>🔤 Word Scramble</h3>
+        <p class="muted">Can you unscramble the word?</p>
+        <button class="btn" data-game="scramble">New word</button>
+        <h2 id="scrambleWord" class="gradient-text">Ready?</h2>
+        <div class="field">
+          <label for="scrambleAnswer">Your answer</label>
+          <input id="scrambleAnswer" autocomplete="off" placeholder="Type the word">
+        </div>
+        <button class="btn btn-small" data-scramble-check>Check answer</button>
+      </article>
+
+      <article class="card">
+        <h3>🧠 Quick Quiz</h3>
+        <p class="muted">Test your general knowledge.</p>
+        <button class="btn" data-game="quiz">Start quiz</button>
+        <div id="quizArea"></div>
+      </article>
+
+      <article class="card">
+        <h3>⭕ Tic-Tac-Toe</h3>
+        <p class="muted">You are X. Play against the computer.</p>
+        <div id="ticBoard" class="game-board"></div>
+        <button class="btn btn-small" data-game="tic">Restart</button>
+      </article>
+
+      <article class="card">
+        <h3>🔢 Number Guess</h3>
+        <p class="muted">Guess the secret number from 1 to 20.</p>
+        <div class="field">
+          <label for="numberGuess">Your guess</label>
+          <input id="numberGuess" type="number" min="1" max="20" placeholder="1–20">
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-small" data-number-guess>Guess</button>
+          <button class="btn btn-small" data-game="number">New game</button>
+        </div>
+      </article>
+
+      <article class="card">
+        <h3>🃏 Memory Match</h3>
+        <p class="muted">Find all matching pairs.</p>
+        <div id="memoryBoard" class="memory-board"></div>
+        <button class="btn btn-small" data-game="memory">Restart</button>
+      </article>
+
+      <article class="card">
+        <h3>⚡ Reaction Test</h3>
+        <p class="muted">Wait for the signal, then click quickly.</p>
+        <button class="btn btn-primary" id="reactionButton" data-reaction-click>Start reaction test</button>
+      </article>
+
+      <article class="card">
+        <h3>🎯 Your progress</h3>
+        <p class="muted">Earn experience points by playing and participating.</p>
+        <div id="achievements"></div>
+      </article>
+    </div>
+
+    <p id="gameMessage" class="game-message"></p>
+  </section>
+
+
+  <!-- WATCH HUB -->
+
+  <section class="page" id="page-watch">
+    <div class="section-heading">
+      <div>
+        <span class="eyebrow">📺 Watch together, discuss afterwards</span>
+        <h1>Watch <span class="gradient-text">Hub</span></h1>
+        <p class="muted">Find videos and bring the conversation back to DebateUs.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Find something to watch</h2>
+      <div class="filters">
+        <input id="watchSearch" placeholder="Search videos on YouTube..." aria-label="Search videos">
+        <button class="btn btn-primary" data-watch-search>Search YouTube ↗</button>
+      </div>
+
+      <div class="field">
+        <label for="watchUrl">Or paste a YouTube video link to embed it</label>
+        <input id="watchUrl" type="url" placeholder="https://www.youtube.com/watch?v=...">
+      </div>
+      <button class="btn" style="margin-top:12px" data-watch-embed>Load video</button>
+
+      <div id="videoEmbed" class="video-frame" style="margin-top:18px" hidden></div>
+      <p class="muted">Videos are provided by YouTube. Availability and playback depend on YouTube's settings.</p>
+    </div>
+
+    <section class="section">
+      <div class="section-heading">
+        <h2>Discuss what you watch</h2>
+      </div>
+      <button class="btn btn-primary" data-action="new-debate">Create a debate about a video</button>
+    </section>
+  </section>
+
+
+  <!-- LIVE ARENA -->
+
+  <section class="page" id="page-arena">
+    <div class="section-heading">
+      <div>
+        <span class="eyebrow"><span class="dot"></span> Live debate mode</span>
+        <h1>Live <span class="gradient-text">Arena</span></h1>
+        <p class="muted">Create a topic, invite a challenger and let the audience vote.</p>
+      </div>
+    </div>
+
+    <div class="live-banner">
+      <h2>Start a live room</h2>
+      <form id="roomForm">
+        <div class="field">
+          <label for="roomTitle">Debate topic</label>
+          <input id="roomTitle" maxlength="140" required
+            placeholder="e.g. Are video games a sport?">
+        </div>
+        <button class="btn btn-primary" type="submit" style="margin-top:12px">Create room</button>
+      </form>
+      <p class="muted">
+        Prototype limitation: rooms are saved in this browser and are not shared
+        with other devices yet.
+      </p>
+    </div>
+
+    <section class="section">
+      <div class="section-heading">
+        <h2>Available rooms</h2>
+      </div>
+      <div class="grid" id="roomList"></div>
+    </section>
+  </section>
+
+
+  <!-- LEADERBOARD -->
+
+  <section class="page" id="page-leaderboard">
+    <div class="section-heading">
+      <div>
+        <span class="eyebrow">🏆 Community achievements</span>
+        <h1>Leader<span class="gradient-text">board</span></h1>
+        <p class="muted">See local prototype profiles ranked by earned XP.</p>
+      </div>
+    </div>
+    <div id="leaderboardList" class="grid"></div>
+  </section>
+
+
+  <!-- NOTIFICATIONS -->
+
+  <section class="page" id="page-notifications">
+    <div class="section-heading">
+      <div>
+        <span class="eyebrow">🔔 Updates</span>
+        <h1>Your <span class="gradient-text">notifications</span></h1>
+        <p class="muted">Updates saved by this browser prototype.</p>
+      </div>
+    </div>
+    <div id="notificationList" class="grid"></div>
+  </section>
+
+
+  <!-- PROFILE -->
+
+  <section class="page" id="page-profile">
+    <div class="section-heading">
+      <div>
+        <span class="eyebrow">👤 Your corner of DebateUs</span>
+        <h1>Your <span class="gradient-text">profile</span></h1>
+        <p class="muted">Your debates, profile details and progress.</p>
+      </div>
+    </div>
+
+    <div id="profileContent"></div>
+  </section>
+
+</main>
+
+
+<!-- CREATE DEBATE DIALOG -->
+
+<dialog id="createDialog">
+  <div class="dialog-inner">
+    <div class="dialog-header">
+      <h2>Create a debate</h2>
+      <button class="dialog-close" data-close="createDialog" aria-label="Close">✕</button>
+    </div>
+
+    <form id="createDebateForm">
+      <div class="field">
+        <label for="newDebateTitle">Debate question</label>
+        <input id="newDebateTitle" maxlength="140" required
+          placeholder="Should school start later?">
+      </div>
+
+      <div class="field" style="margin-top:14px">
+        <label for="newDebateDescription">Description and context</label>
+        <textarea id="newDebateDescription" maxlength="700"
+          placeholder="Explain what people are debating..."></textarea>
+      </div>
+
+      <div class="field" style="margin-top:14px">
+        <label for="newDebateCategory">Category</label>
+        <select id="newDebateCategory"></select>
+      </div>
+
+      <div class="field" style="margin-top:14px">
+        <label for="newDebateSideA">Side A</label>
+        <input id="newDebateSideA" maxlength="70" required placeholder="Yes">
+      </div>
+
+      <div class="field" style="margin-top:14px">
+        <label for="newDebateSideB">Side B</label>
+        <input id="newDebateSideB" maxlength="70" required placeholder="No">
+      </div>
+
+      <div class="card-actions">
+        <button class="btn btn-primary" type="submit">Publish debate</button>
+        <button class="btn" type="button" data-close="createDialog">Cancel</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+
+<!-- DEBATE DETAILS DIALOG -->
+
+<dialog id="detailDialog">
+  <div class="dialog-inner">
+    <div class="dialog-header">
+      <h2 id="detailTitle">Debate</h2>
+      <button class="dialog-close" data-close="detailDialog" aria-label="Close">✕</button>
+    </div>
+    <div id="detailContent"></div>
+  </div>
+</dialog>
+
+
+<!-- EDIT PROFILE DIALOG -->
+
+<dialog id="editProfileDialog">
+  <div class="dialog-inner">
+    <div class="dialog-header">
+      <h2>Edit profile</h2>
+      <button class="dialog-close" data-close="editProfileDialog" aria-label="Close">✕</button>
+    </div>
+
+    <form id="editProfileForm">
+      <div class="field">
+        <label for="profileDisplayName">Display name</label>
+        <input id="profileDisplayName" maxlength="40" placeholder="Your display name">
+      </div>
+      <div class="field" style="margin-top:14px">
+        <label for="profileBio">Bio</label>
+        <textarea id="profileBio" maxlength="240" placeholder="Tell the community a little about yourself"></textarea>
+      </div>
+      <button class="btn btn-primary" type="submit" style="margin-top:14px">Save profile</button>
+    </form>
+  </div>
+</dialog>
+
+
+<!-- LIVE ROOM DIALOG -->
+
+<dialog id="roomDialog">
+  <div class="dialog-inner">
+    <div class="dialog-header">
+      <h2 id="roomDialogTitle">Live room</h2>
+      <button class="dialog-close" data-close="roomDialog" aria-label="Close">✕</button>
+    </div>
+    <div id="roomDialogContent"></div>
+  </div>
+</dialog>
+
+
+<!-- TOAST MESSAGES -->
+
+<div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+<script>
+"use strict";
+
+/* =========================================
+   DEBATEUS — PART 3
+   Core data, navigation, debates, voting,
+   community, and mini-games
+========================================= */
+
+const CATEGORIES = [
+  "All",
+  "Anime & Manga",
+  "Gaming",
+  "Movies & TV",
+  "Music",
+  "Sports",
+  "School & Education",
+  "Relationships",
+  "Technology",
+  "Science",
+  "Politics",
+  "Ethics & Philosophy",
+  "Books",
+  "Food",
+  "Lifestyle",
+  "Environment",
+  "History",
+  "Art & Creativity",
+  "Money & Work",
+  "Internet Culture",
+  "Everyday Arguments",
+  "Other"
+];
+
+const STORAGE_KEY = "debateus_complete_v1";
+
+const starterDebates = [
+  {
+    id: "seed1",
+    title: "Is gaming a sport?",
+    description: "Should competitive gaming be recognised alongside traditional sports?",
+    category: "Gaming",
+    sideA: "Yes, absolutely",
+    sideB: "No, not a sport",
+    votesA: 18,
+    votesB: 12,
+    author: "DebateUs",
+    createdAt: Date.now() - 86400000,
+    ended: false
+  },
+  {
+    id: "seed2",
+    title: "Should anime get more recognition as art?",
+    description: "Consider the animation, storytelling, music, and creativity involved.",
+    category: "Anime & Manga",
+    sideA: "Definitely",
+    sideB: "Not more than it gets",
+    votesA: 24,
+    votesB: 7,
+    author: "DebateUs",
+    createdAt: Date.now() - 72000000,
+    ended: false
+  },
+  {
+    id: "seed3",
+    title: "Is social media doing more harm than good?",
+    description: "Does it connect people, or does it create more problems than it solves?",
+    category: "Technology",
+    sideA: "More harm",
+    sideB: "More good",
+    votesA: 15,
+    votesB: 16,
+    author: "DebateUs",
+    createdAt: Date.now() - 54000000,
+    ended: false
+  },
+  {
+    id: "seed4",
+    title: "Are films better than TV series?",
+    description: "Is a complete story in two hours better than a story told over episodes?",
+    category: "Movies & TV",
+    sideA: "Films",
+    sideB: "TV series",
+    votesA: 13,
+    votesB: 20,
+    author: "DebateUs",
+    createdAt: Date.now() - 40000000,
+    ended: false
+  },
+  {
+    id: "seed5",
+    title: "Should school start later?",
+    description: "Would a later start improve sleep, learning, and student wellbeing?",
+    category: "School & Education",
+    sideA: "Yes, start later",
+    sideB: "Keep current times",
+    votesA: 27,
+    votesB: 8,
+    author: "DebateUs",
+    createdAt: Date.now() - 30000000,
+    ended: false
+  },
+  {
+    id: "seed6",
+    title: "Is pineapple acceptable on pizza?",
+    description: "A classic food debate: sweet and savoury or an absolute crime?",
+    category: "Food",
+    sideA: "Pineapple belongs",
+    sideB: "Keep it off",
+    votesA: 19,
+    votesB: 21,
+    author: "DebateUs",
+    createdAt: Date.now() - 20000000,
+    ended: false
+  },
+  {
+    id: "seed7",
+    title: "Do video games tell stories as well as films?",
+    description: "Can interactive storytelling compete with cinema?",
+    category: "Gaming",
+    sideA: "Games can be better",
+    sideB: "Films do it better",
+    votesA: 16,
+    votesB: 10,
+    author: "DebateUs",
+    createdAt: Date.now() - 10000000,
+    ended: false
+  },
+  {
+    id: "seed8",
+    title: "Should homework be optional?",
+    description: "Does homework help learning, or should students have more free time?",
+    category: "School & Education",
+    sideA: "Make it optional",
+    sideB: "Keep homework",
+    votesA: 31,
+    votesB: 14,
+    author: "DebateUs",
+    createdAt: Date.now() - 5000000,
+    ended: false
+  },
+  {
+    id: "seed9",
+    title: "Can a remake improve on the original?",
+    description: "Should studios remake popular films, games, and series?",
+    category: "Movies & TV",
+    sideA: "Remakes can improve them",
+    sideB: "Leave originals alone",
+    votesA: 9,
+    votesB: 17,
+    author: "DebateUs",
+    createdAt: Date.now() - 2000000,
+    ended: false
+  }
+];
+
+function createInitialState() {
+  return {
+    debates: starterDebates.map(debate => ({ ...debate })),
+    users: [],
+    current: null,
+    votes: {},
+    posts: [],
+    notifications: [],
+    rooms: [],
+    liveVotes: {},
+    preferences: [],
+    xp: {}
+  };
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return createInitialState();
+
+    const saved = JSON.parse(raw);
+    const defaults = createInitialState();
+
+    if (!saved || typeof saved !== "object") return defaults;
+
+    return {
+      ...defaults,
+      ...saved,
+      debates: Array.isArray(saved.debates) ? saved.debates : defaults.debates,
+      users: Array.isArray(saved.users) ? saved.users : [],
+      posts: Array.isArray(saved.posts) ? saved.posts : [],
+      notifications: Array.isArray(saved.notifications) ? saved.notifications : [],
+      rooms: Array.isArray(saved.rooms) ? saved.rooms : [],
+      votes: saved.votes && typeof saved.votes === "object" ? saved.votes : {},
+      liveVotes: saved.liveVotes && typeof saved.liveVotes === "object" ? saved.liveVotes : {},
+      preferences: Array.isArray(saved.preferences) ? saved.preferences : [],
+      xp: saved.xp && typeof saved.xp === "object" ? saved.xp : {}
+    };
+  } catch (error) {
+    console.error("Could not load saved DebateUs data:", error);
+    return createInitialState();
+  }
+}
+
+let state = loadState();
+let activeCategory = "All";
+let activeExploreFilter = "popular";
+let activeRoomId = null;
+let memoryCards = [];
+let memoryOpen = [];
+let memoryMatched = [];
+let reactionTimeout = null;
+let reactionStarted = 0;
+let numberTarget = 0;
+let numberAttempts = 0;
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (error) {
+    console.error("Could not save DebateUs data:", error);
+    toast("Your browser could not save this change.");
+  }
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+function toast(message) {
+  const container = document.getElementById("toastContainer");
+  if (!container) return;
+
+  const item = document.createElement("div");
+  item.className = "toast";
+  item.textContent = message;
+  container.appendChild(item);
+
+  window.setTimeout(() => item.remove(), 3500);
+}
+
+function getCurrentUsername() {
+  return state.current?.username || null;
+}
+
+function getUserVote(debateId) {
+  return state.votes[debateId] || null;
+}
+
+function getTotalVotes(debate) {
+  return Number(debate.votesA || 0) + Number(debate.votesB || 0);
+}
+
+function getVotePercentages(debate) {
+  const total = getTotalVotes(debate);
+
+  if (!total) return { a: 50, b: 50 };
+
+  return {
+    a: Math.round((Number(debate.votesA || 0) / total) * 100),
+    b: Math.round((Number(debate.votesB || 0) / total) * 100)
+  };
+}
+
+function getDebateById(id) {
+  return state.debates.find(debate => debate.id === id);
+}
+
+
+/* ---------- NAVIGATION ---------- */
+
+function showPage(pageName) {
+  const page = document.getElementById("page-" + pageName);
+
+  if (!page) {
+    toast("That page isn't available.");
+    return;
+  }
+
+  document.querySelectorAll(".page").forEach(section => {
+    section.classList.toggle("active", section === page);
+  });
+
+  document.querySelectorAll("[data-page]").forEach(button => {
+    const active = button.dataset.page === pageName;
+    button.classList.toggle("active", active);
+
+    if (active) button.setAttribute("aria-current", "page");
+    else button.removeAttribute("aria-current");
+  });
+
+  if (pageName === "home") renderHome();
+  if (pageName === "explore") renderExplore();
+  if (pageName === "debates") renderDebates();
+  if (pageName === "community") renderCommunity();
+  if (pageName === "profile") renderProfile();
+  if (pageName === "leaderboard") renderLeaderboard();
+  if (pageName === "notifications") renderNotifications();
+  if (pageName === "arena") renderRooms();
+  if (pageName === "lounge") renderAchievements();
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+document.addEventListener("click", event => {
+  const pageButton = event.target.closest("[data-page]");
+  if (pageButton) {
+    event.preventDefault();
+    showPage(pageButton.dataset.page);
+  }
+});
+
+
+/* ---------- CATEGORY FILTERS ---------- */
+
+function renderCategoryChips(containerId, selectedCategory, onSelectName) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  container.innerHTML = CATEGORIES.map(category => `
+    <button
+      class="category-chip ${category === selectedCategory ? "active" : ""}"
+      data-category-select="${escapeHTML(category)}"
+      data-category-target="${escapeHTML(onSelectName)}">
+      ${escapeHTML(category)}
+    </button>
+  `).join("");
+}
+
+function renderAllCategoryFilters() {
+  renderCategoryChips("homeCategories", activeCategory, "home");
+  renderCategoryChips("exploreCategories", activeCategory, "explore");
+  renderCategoryChips("debateCategories", activeCategory, "debates");
+}
+
+document.addEventListener("click", event => {
+  const button = event.target.closest("[data-category-select]");
+  if (!button) return;
+
+  activeCategory = button.dataset.categorySelect;
+  renderAllCategoryFilters();
+
+  if (button.dataset.categoryTarget === "home") {
+    renderHome();
+    showPage("home");
+  } else if (button.dataset.categoryTarget === "explore") {
+    renderExplore();
+    showPage("explore");
+  } else {
+    renderDebates();
+    showPage("debates");
+  }
+});
+
+
+/* ---------- DEBATE CARDS ---------- */
+
+function debateCard(debate) {
+  const total = getTotalVotes(debate);
+  const percentages = getVotePercentages(debate);
+  const userVote = getUserVote(debate.id);
+  const ended = Boolean(debate.ended);
+
+  return `
+    <article class="card debate-card">
+      <div class="card-top">
+        <span class="pill">${escapeHTML(debate.category)}</span>
+        <span class="pill">${ended ? "Ended" : "Open"}</span>
+      </div>
+
+      <h3>${escapeHTML(debate.title)}</h3>
+
+      <p class="debate-description">
+        ${escapeHTML(debate.description || "Share your perspective on this topic.")}
+      </p>
+
+      <div class="muted">
+        By ${escapeHTML(debate.author || "Community member")}
+        · ${total} vote${total === 1 ? "" : "s"}
+      </div>
+
+      <div class="vote-bar" aria-label="Vote results">
+        <div class="vote-bar-a" style="width:${percentages.a}%"></div>
+        <div class="vote-bar-b" style="width:${percentages.b}%"></div>
+      </div>
+
+      <div class="row-between muted">
+        <span>${percentages.a}% ${escapeHTML(debate.sideA)}</span>
+        <span>${percentages.b}% ${escapeHTML(debate.sideB)}</span>
+      </div>
+
+      <div class="vote-options">
+        <button
+          class="btn vote-a"
+          data-vote="${escapeHTML(debate.id)}"
+          data-side="A"
+          ${ended || userVote ? "disabled" : ""}>
+          ${userVote === "A" ? "✓ " : ""}${escapeHTML(debate.sideA)}
+        </button>
+
+        <button
+          class="btn vote-b"
+          data-vote="${escapeHTML(debate.id)}"
+          data-side="B"
+          ${ended || userVote ? "disabled" : ""}>
+          ${userVote === "B" ? "✓ " : ""}${escapeHTML(debate.sideB)}
+        </button>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn btn-small" data-detail="${escapeHTML(debate.id)}">View discussion</button>
+        ${!ended && state.current?.username === debate.author
+          ? `<button class="btn btn-small" data-end-debate="${escapeHTML(debate.id)}">End debate</button>`
+          : ""}
+      </div>
+    </article>
+  `;
+}
+
+function renderDebateCollection(containerId, debates) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  if (!debates.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <h3>No debates found</h3>
+        <p>Try another category or create a new debate.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = debates.map(debateCard).join("");
+}
+
+function getFilteredDebates(options = {}) {
+  let debates = state.debates.slice();
+
+  if (activeCategory !== "All" && !options.ignoreCategory) {
+    debates = debates.filter(debate => debate.category === activeCategory);
+  }
+
+  const search = document.getElementById("debateSearch")?.value.trim().toLowerCase();
+
+  if (search && !options.ignoreSearch) {
+    debates = debates.filter(debate =>
+      [debate.title, debate.description, debate.category, debate.author]
+        .some(value => String(value || "").toLowerCase().includes(search))
+    );
+  }
+
+  const status = document.getElementById("debateStatus")?.value || "all";
+
+  if (!options.ignoreStatus) {
+    if (status === "open") debates = debates.filter(debate => !debate.ended);
+    if (status === "ended") debates = debates.filter(debate => debate.ended);
+  }
+
+  const sort = document.getElementById("debateSort")?.value || "popular";
+
+  if (sort === "newest") {
+    debates.sort((a, b) => b.createdAt - a.createdAt);
+  } else if (sort === "title") {
+    debates.sort((a, b) => a.title.localeCompare(b.title));
+  } else {
+    debates.sort((a, b) => getTotalVotes(b) - getTotalVotes(a));
+  }
+
+  return debates;
+}
+
+function renderDebates() {
+  const debates = getFilteredDebates();
+  const container = document.getElementById("debateList");
+  const empty = document.getElementById("debateEmpty");
+
+  if (container) container.innerHTML = debates.map(debateCard).join("");
+  if (empty) empty.hidden = debates.length > 0;
+}
+
+function renderHome() {
+  const trending = document.getElementById("homeTrending");
+  if (trending) {
+    const debates = state.debates
+      .filter(debate => !debate.ended)
+      .slice()
+      .sort((a, b) => getTotalVotes(b) - getTotalVotes(a))
+      .slice(0, 3);
+
+    renderDebateCollection("homeTrending", debates);
+  }
+
+  renderAllCategoryFilters();
+  updateStats();
+}
+
+function renderExplore() {
+  let debates = getFilteredDebates({ ignoreSearch: true, ignoreStatus: true });
+
+  if (activeExploreFilter === "newest") {
+    debates.sort((a, b) => b.createdAt - a.createdAt);
+  } else {
+    debates.sort((a, b) => getTotalVotes(b) - getTotalVotes(a));
+  }
+
+  renderDebateCollection("exploreDebates", debates.slice(0, 9));
+  renderAllCategoryFilters();
+}
+
+function renderDebatesAlt() {
+  renderDebates();
+}
+
+function updateStats() {
+  const debates = document.getElementById("statDebates");
+  const votes = document.getElementById("statVotes");
+  const users = document.getElementById("statUsers");
+
+  if (debates) debates.textContent = state.debates.length;
+
+  if (votes) {
+    votes.textContent = state.debates.reduce(
+      (sum, debate) => sum + getTotalVotes(debate), 0
+    );
+  }
+
+  if (users) users.textContent = state.users.length;
+}
+
+
+/* ---------- VOTING ---------- */
+
+function voteDebate(debateId, side) {
+  const debate = getDebateById(debateId);
+
+  if (!debate) return;
+  if (debate.ended) {
+    toast("This debate has ended.");
+    return;
+  }
+
+  if (!state.current) {
+    toast("Create a local profile or sign in before voting.");
+    return;
+  }
+
+  if (state.votes[debateId]) {
+    toast("You've already voted on this debate.");
+    return;
+  }
+
+  if (side !== "A" && side !== "B") return;
+
+  if (side === "A") debate.votesA = Number(debate.votesA || 0) + 1;
+  else debate.votesB = Number(debate.votesB || 0) + 1;
+
+  state.votes[debateId] = side;
+  saveState();
+
+  renderDebates();
+  renderHome();
+  renderExplore();
+
+  toast("Your vote has been counted!");
+}
+
+document.addEventListener("click", event => {
+  const voteButton = event.target.closest("[data-vote]");
+  if (voteButton) {
+    voteDebate(voteButton.dataset.vote, voteButton.dataset.side);
+  }
+
+  const endButton = event.target.closest("[data-end-debate]");
+  if (endButton) {
+    const debate = getDebateById(endButton.dataset.endDebate);
+
+    if (!debate || debate.author !== state.current?.username) {
+      toast("Only the debate creator can end this debate.");
+      return;
+    }
+
+    debate.ended = true;
+    saveState();
+    renderDebates();
+    renderHome();
+    renderExplore();
+    toast("Debate ended.");
+  }
+});
+
+
+/* ---------- DEBATE DETAILS ---------- */
+
+function openDebate(debateId) {
+  const debate = getDebateById(debateId);
+  if (!debate) return;
+
+  const title = document.getElementById("detailTitle");
+  const content = document.getElementById("detailContent");
+
+  if (title) title.textContent = debate.title;
+
+  if (content) {
+    const total = getTotalVotes(debate);
+    const percentages = getVotePercentages(debate);
+
+    content.innerHTML = `
+      <span class="pill">${escapeHTML(debate.category)}</span>
+      <p>${escapeHTML(debate.description || "No additional description.")}</p>
+      <p class="muted">Created by ${escapeHTML(debate.author || "Community member")}</p>
+
+      <div class="card">
+        <h3>Current results</h3>
+        <p>${escapeHTML(debate.sideA)}: ${percentages.a}% (${Number(debate.votesA || 0)} votes)</p>
+        <p>${escapeHTML(debate.sideB)}: ${percentages.b}% (${Number(debate.votesB || 0)} votes)</p>
+        <p class="muted">${total} votes total</p>
+      </div>
+
+      <p class="muted">
+        ${debate.ended ? "This debate has ended." : "Choose a side on the debate card to cast your vote."}
+      </p>
+    `;
+  }
+
+  document.getElementById("detailDialog")?.showModal();
+}
+
+document.addEventListener("click", event => {
+  const detailButton = event.target.closest("[data-detail]");
+  if (detailButton) openDebate(detailButton.dataset.detail);
+});
+
+
+/* ---------- CREATE DEBATE ---------- */
+
+function openCreateDebate() {
+  if (!state.current) {
+    toast("Create a local profile before publishing a debate.");
+    document.getElementById("authDialog")?.showModal();
+    return;
+  }
+
+  const select = document.getElementById("newDebateCategory");
+
+  if (select && !select.options.length) {
+    select.innerHTML = CATEGORIES
+      .filter(category => category !== "All")
+      .map(category => `<option value="${escapeHTML(category)}">${escapeHTML(category)}</option>`)
+      .join("");
+  }
+
+  document.getElementById("createDialog")?.showModal();
+}
+
+document.addEventListener("click", event => {
+  const createButton = event.target.closest('[data-action="new-debate"]');
+  if (createButton) openCreateDebate();
+
+  const filterButton = event.target.closest("[data-explore-filter]");
+  if (filterButton) {
+    activeExploreFilter = filterButton.dataset.exploreFilter;
+    renderExplore();
+    showPage("explore");
+  }
+
+  const dailyButton = event.target.closest('[data-action="daily-challenge"]');
+  if (dailyButton) {
+    const available = state.debates.filter(debate => !debate.ended);
+
+    if (!available.length) {
+      toast("Create a debate to start today's challenge.");
+      return;
+    }
+
+    const chosen = available[Math.floor(Math.random() * available.length)];
+    openDebate(chosen.id);
+  }
+
+  const clearButton = event.target.closest('[data-action="clear-filters"]');
+  if (clearButton) {
+    const search = document.getElementById("debateSearch");
+    const sort = document.getElementById("debateSort");
+    const status = document.getElementById("debateStatus");
+
+    if (search) search.value = "";
+    if (sort) sort.value = "popular";
+    if (status) status.value = "all";
+
+    activeCategory = "All";
+    renderAllCategoryFilters();
+    renderDebates();
+  }
+});
+
+const createDebateForm = document.getElementById("createDebateForm");
+
+if (createDebateForm) {
+  createDebateForm.addEventListener("submit", event => {
+    event.preventDefault();
+
+    if (!state.current) {
+      toast("Create a local profile first.");
+      return;
+    }
+
+    const title = document.getElementById("newDebateTitle").value.trim();
+    const description = document.getElementById("newDebateDescription").value.trim();
+    const category = document.getElementById("newDebateCategory").value;
+    const sideA = document.getElementById("newDebateSideA").value.trim();
+    const sideB = document.getElementById("newDebateSideB").value.trim();
+
+    if (!title || !sideA || !sideB) {
+      toast("Please complete the required fields.");
+      return;
+    }
+
+    if (sideA.toLowerCase() === sideB.toLowerCase()) {
+      toast("Side A and Side B need to be different.");
+      return;
+    }
+
+    state.debates.push({
+      id: "debate-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+      title,
+      description,
+      category,
+      sideA,
+      sideB,
+      votesA: 0,
+      votesB: 0,
+      author: state.current.username,
+      createdAt: Date.now(),
+      ended: false
+    });
+
+    saveState();
+    createDebateForm.reset();
+    document.getElementById("createDialog")?.close();
+
+    renderDebates();
+    renderHome();
+    renderExplore();
+    showPage("debates");
+
+    toast("Your debate has been published!");
+  });
+}
+
+
+/* ---------- SEARCH AND FILTER EVENTS ---------- */
+
+["debateSearch", "debateSort", "debateStatus"].forEach(id => {
+  const input = document.getElementById(id);
+
+  if (input) {
+    input.addEventListener("input", renderDebates);
+    input.addEventListener("change", renderDebates);
+  }
+});
+
+
+/* ---------- COMMUNITY FEED ---------- */
+
+function renderCommunity() {
+  const container = document.getElementById("communityFeed");
+  if (!container) return;
+
+  if (!state.posts.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <h3>Start the conversation</h3>
+        <p>Share the first community post.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = state.posts.slice().reverse().map(post => {
+    const liked = (post.likes || []).includes(getCurrentUsername());
+
+    return `
+      <article class="card">
+        <div class="card-top">
+          <strong>${escapeHTML(post.author)}</strong>
+          <span class="pill">${escapeHTML(post.category)}</span>
+        </div>
+        <p>${escapeHTML(post.text)}</p>
+        <div class="card-actions">
+          <button class="btn btn-small" data-post-like="${escapeHTML(post.id)}">
+            ${liked ? "♥" : "♡"} ${(post.likes || []).length}
+          </button>
+          ${post.author === getCurrentUsername()
+            ? `<button class="btn btn-small" data-post-delete="${escapeHTML(post.id)}">Delete</button>`
+            : ""}
+          <button class="btn btn-small" data-post-report="${escapeHTML(post.id)}">Report</button>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+const communityForm = document.getElementById("communityForm");
+
+if (communityForm) {
+  communityForm.addEventListener("submit", event => {
+    event.preventDefault();
+
+    if (!state.current) {
+      toast("Create a local profile before posting.");
+      document.getElementById("authDialog")?.showModal();
+      return;
+    }
+
+    const text = document.getElementById("communityText").value.trim();
+    const category = document.getElementById("communityCategory").value;
+
+    if (!text) {
+      toast("Write something first.");
+      return;
+    }
+
+    state.posts.push({
+      id: "post-" + Date.now(),
+      author: state.current.username,
+      category,
+      text,
+      likes: [],
+      createdAt: Date.now()
+    });
+
+    saveState();
+    communityForm.reset();
+    renderCommunity();
+    toast("Post shared!");
+  });
+}
+
+document.addEventListener("click", event => {
+  const likeButton = event.target.closest("[data-post-like]");
+  const deleteButton = event.target.closest("[data-post-delete]");
+  const reportButton = event.target.closest("[data-post-report]");
+
+  if (likeButton) {
+    if (!state.current) {
+      toast("Sign in to like posts.");
+      return;
+    }
+
+    const post = state.posts.find(item => item.id === likeButton.dataset.postLike);
+    if (!post) return;
+
+    post.likes = post.likes || [];
+
+    const username = state.current.username;
+
+    post.likes = post.likes.includes(username)
+      ? post.likes.filter(name => name !== username)
+      : [...post.likes, username];
+
+    saveState();
+    renderCommunity();
+  }
+
+  if (deleteButton) {
+    const post = state.posts.find(item => item.id === deleteButton.dataset.postDelete);
+
+    if (!post || post.author !== getCurrentUsername()) {
+      toast("You can only delete your own posts.");
+      return;
+    }
+
+    state.posts = state.posts.filter(item => item.id !== post.id);
+    saveState();
+    renderCommunity();
+    toast("Post deleted.");
+  }
+
+  if (reportButton) {
+    toast("Report noted for this prototype. No moderation team is connected yet.");
+  }
+});
+
+
+/* ---------- MINI-GAME HELPERS ---------- */
+
+function awardXP(amount) {
+  if (!state.current) {
+    toast("Sign in to save XP progress.");
+    return;
+  }
+
+  const username = state.current.username;
+  state.xp[username] = Number(state.xp[username] || 0) + amount;
+  state.current.xp = state.xp[username];
+
+  saveState();
+  renderAchievements();
+  renderLeaderboard();
+
+  const display = document.getElementById("xpDisplay");
+  if (display) display.textContent = state.current.xp + " XP";
+
+  toast("+" + amount + " XP earned!");
+}
+
+function gameMessage(message) {
+  const output = document.getElementById("gameMessage");
+  if (output) output.textContent = message;
+}
+
+
+/* Rock Paper Scissors */
+
+function playRPS(choice) {
+  const choices = ["Rock", "Paper", "Scissors"];
+  const computer = choices[Math.floor(Math.random() * choices.length)];
+
+  let result;
+
+  if (choice === computer) {
+    result = "It's a draw!";
+  } else if (
+    (choice === "Rock" && computer === "Scissors") ||
+    (choice === "Paper" && computer === "Rock") ||
+    (choice === "Scissors" && computer === "Paper")
+  ) {
+    result = "You win!";
+    awardXP(2);
+  } else {
+    result = "Computer wins!";
+  }
+
+  const output = document.getElementById("rpsResult");
+  if (output) output.textContent = `You: ${choice} · Computer: ${computer} · ${result}`;
+}
+
+document.addEventListener("click", event => {
+  const button = event.target.closest("[data-rps]");
+  if (button) playRPS(button.dataset.rps);
+});
+
+
+/* Word Scramble */
+
+let scrambleAnswer = "";
+
+function scrambleWord() {
+  const words = ["argument", "community", "football", "creative", "debate", "respect", "strategy", "technology"];
+  const word = words[Math.floor(Math.random() * words.length)];
+
+  let mixed = word;
+
+  for (let count = 0; count < 15 && mixed === word; count++) {
+    mixed = word.split("").sort(() => Math.random() - 0.5).join("");
+  }
+
+  scrambleAnswer = word;
+
+  const output = document.getElementById("scrambleWord");
+  const input = document.getElementById("scrambleAnswer");
+
+  if (output) output.textContent = mixed;
+  if (input) input.value = "";
+
+  gameMessage("Unscramble the word!");
+}
+
+function checkScramble() {
+  const input = document.getElementById("scrambleAnswer");
+  if (!input || !scrambleAnswer) {
+    toast("Start a new word first.");
+    return;
+  }
+
+  if (input.value.trim().toLowerCase() === scrambleAnswer) {
+    gameMessage("Correct! Nice work.");
+    awardXP(5);
+    scrambleAnswer = "";
+  } else {
+    gameMessage("Not quite — try again.");
+  }
+}
+
+document.addEventListener("click", event => {
+  if (event.target.closest('[data-game="scramble"]')) scrambleWord();
+  if (event.target.closest("[data-scramble-check]")) checkScramble();
+});
+
+
+/* Quick Quiz */
+
+function quickQuiz() {
+  const questions = [
+    { q: "Which planet is known as the Red Planet?", a: ["Mars", "Venus", "Jupiter"], correct: 0 },
+    { q: "How many sides does a hexagon have?", a: ["Five", "Six", "Eight"], correct: 1 },
+    { q: "Which ocean is the largest?", a: ["Atlantic", "Indian", "Pacific"], correct: 2 },
+    { q: "What is the capital of Japan?", a: ["Seoul", "Tokyo", "Beijing"], correct: 1 },
+    { q: "Which instrument has keys, pedals and strings?", a: ["Piano", "Flute", "Drum"], correct: 0 }
+  ];
+
+  const question = questions[Math.floor(Math.random() * questions.length)];
+  const output = document.getElementById("quizArea");
+  if (!output) return;
+
+  output.innerHTML = `
+    <p><strong>${escapeHTML(question.q)}</strong></p>
+    ${question.a.map((answer, index) => `
+      <button class="btn btn-small"
+        data-quiz-answer="${index}"
+        data-quiz-correct="${question.correct}">
+        ${escapeHTML(answer)}
+      </button>
+    `).join(" ")}
+  `;
+}
+
+document.addEventListener("click", event => {
+  if (event.target.closest('[data-game="quiz"]')) quickQuiz();
+
+  const answer = event.target.closest("[data-quiz-answer]");
+  if (!answer) return;
+
+  if (Number(answer.dataset.quizAnswer) === Number(answer.dataset.quizCorrect)) {
+    gameMessage("Correct answer!");
+    awardXP(2);
+  } else {
+    gameMessage("Not quite — try again next round.");
+  }
+
+  document.querySelectorAll("[data-quiz-answer]").forEach(button => {
+    button.disabled = true;
+  });
+});
+
+
+/* Number Guess */
+
+function resetNumberGame() {
+  numberTarget = Math.floor(Math.random() * 20) + 1;
+  numberAttempts = 0;
+
+  const input = document.getElementById("numberGuess");
+  if (input) input.value = "";
+
+  gameMessage("Guess a number from 1 to 20.");
+}
+
+function guessNumber() {
+  const input = document.getElementById("numberGuess");
+  if (!input) return;
+
+  const guess = Number(input.value);
+
+  if (!Number.isInteger(guess) || guess < 1 || guess > 20) {
+    gameMessage("Enter a whole number from 1 to 20.");
+    return;
+  }
+
+  numberAttempts++;
+
+  if (guess === numberTarget) {
+    gameMessage(`Correct! You got it in ${numberAttempts} guesses.`);
+    awardXP(5);
+  } else if (guess < numberTarget) {
+    gameMessage("Too low! Try higher.");
+  } else {
+    gameMessage("Too high! Try lower.");
+  }
+}
+
+document.addEventListener("click", event => {
+  if (event.target.closest('[data-game="number"]')) resetNumberGame();
+  if (event.target.closest("[data-number-guess]")) guessNumber();
+});
+
+
+/* Tic-Tac-Toe */
+
+let ticBoard = Array(9).fill("");
+
+function getTicWinner(board) {
+  const lines = [
+    [0,1,2], [3,4,5], [6,7,8],
+    [0,3,6], [1,4,7], [2,5,8],
+    [0,4,8], [2,4,6]
+  ];
+
+  for (const [a, b, c] of lines) {
+    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+      return board[a];
+    }
+  }
+
+  return board.every(Boolean) ? "draw" : null;
+}
+
+function renderTicTacToe() {
+  const board = document.getElementById("ticBoard");
+  if (!board) return;
+
+  board.innerHTML = ticBoard.map((value, index) => `
+    <button class="btn game-cell" data-tic-cell="${index}"
+      ${value || getTicWinner(ticBoard) ? "disabled" : ""}>
+      ${escapeHTML(value)}
+    </button>
+  `).join("");
+}
+
+function resetTicTacToe() {
+  ticBoard = Array(9).fill("");
+  renderTicTacToe();
+  gameMessage("You're X. The computer is O.");
+}
+
+document.addEventListener("click", event => {
+  if (event.target.closest('[data-game="tic"]')) {
+    resetTicTacToe();
+    return;
+  }
+
+  const cell = event.target.closest("[data-tic-cell]");
+  if (!cell) return;
+
+  const index = Number(cell.dataset.ticCell);
+  if (ticBoard[index] || getTicWinner(ticBoard)) return;
+
+  ticBoard[index] = "X";
+
+  let winner = getTicWinner(ticBoard);
+
+  if (winner) {
+    renderTicTacToe();
+    gameMessage(winner === "X" ? "You win!" : "It's a draw!");
+    if (winner === "X") awardXP(5);
+    return;
+  }
+
+  const available = ticBoard
+    .map((value, i) => value ? -1 : i)
+    .filter(i => i >= 0);
+
+  if (available.length) {
+    const move = available[Math.floor(Math.random() * available.length)];
+    ticBoard[move] = "O";
+  }
+
+  winner = getTicWinner(ticBoard);
+  renderTicTacToe();
+
+  if (winner === "O") gameMessage("Computer wins!");
+  else if (winner === "draw") gameMessage("It's a draw!");
+});
+
+
+/* Memory Match */
+
+function startMemoryGame() {
+  const symbols = ["🍀", "⭐", "🎮", "🔥", "🌙", "🎯"];
+
+  memoryCards = [...symbols, ...symbols].sort(() => Math.random() - 0.5);
+  memoryOpen = [];
+  memoryMatched = [];
+
+  renderMemoryGame();
+}
+
+function renderMemoryGame() {
+  const board = document.getElementById("memoryBoard");
+  if (!board) return;
+
+  board.innerHTML = memoryCards.map((symbol, index) => {
+    const visible = memoryOpen.includes(index) || memoryMatched.includes(index);
+
+    return `
+      <button class="btn memory-cell" data-memory-cell="${index}">
+        ${visible ? symbol : "?"}
+      </button>
+    `;
+  }).join("");
+}
+
+document.addEventListener("click", event => {
+  if (event.target.closest('[data-game="memory"]')) {
+    startMemoryGame();
+    return;
+  }
+
+  const card = event.target.closest("[data-memory-cell]");
+  if (!card) return;
+
+  const index = Number(card.dataset.memoryCell);
+
+  if (
+    memoryOpen.includes(index) ||
+    memoryMatched.includes(index) ||
+    memoryOpen.length >= 2
+  ) return;
+
+  memoryOpen.push(index);
+  renderMemoryGame();
+
+  if (memoryOpen.length === 2) {
+    const [first, second] = memoryOpen;
+
+    if (memoryCards[first] === memoryCards[second]) {
+      memoryMatched.push(first, second);
+      memoryOpen = [];
+      renderMemoryGame();
+
+      if (memoryMatched.length === memoryCards.length) {
+        gameMessage("All pairs matched!");
+        awardXP(5);
+      }
+    } else {
+      gameMessage("No match. Try another pair.");
+
+      window.setTimeout(() => {
+        memoryOpen = [];
+        renderMemoryGame();
+      }, 800);
+    }
+  }
+});
+
+
+/* Reaction Test */
+
+function startReactionTest() {
+  const button = document.getElementById("reactionButton");
+  if (!button) return;
+
+  window.clearTimeout(reactionTimeout);
+
+  reactionStarted = 0;
+  button.disabled = true;
+  button.dataset.ready = "false";
+  button.textContent = "Wait for green...";
+
+  reactionTimeout = window.setTimeout(() => {
+    reactionStarted = performance.now();
+    button.disabled = false;
+    button.dataset.ready = "true";
+    button.textContent = "CLICK NOW!";
+  }, 1500 + Math.random() * 3000);
+}
+
+function clickReactionTest() {
+  const button = document.getElementById("reactionButton");
+  if (!button) return;
+
+  if (button.dataset.ready !== "true") {
+    window.clearTimeout(reactionTimeout);
+    button.disabled = true;
+    button.dataset.ready = "false";
+    button.textContent = "Too early! Try again.";
+    return;
+  }
+
+  const elapsed = Math.round(performance.now() - reactionStarted);
+
+  button.disabled = true;
+  button.dataset.ready = "false";
+  button.textContent = elapsed + " ms — try again";
+
+  gameMessage("Reaction time: " + elapsed + " ms.");
+
+  if (elapsed < 350) awardXP(2);
+}
+
+document.addEventListener("click", event => {
+  if (event.target.closest('[data-game="reaction"]')) startReactionTest();
+  if (event.target.closest("[data-reaction-click]")) clickReactionTest();
+});
+
+
+/* ---------- PROFILE & ACHIEVEMENTS ---------- */
+
+function renderAchievements() {
+  const container = document.getElementById("achievements");
+  if (!container) return;
+
+  const xp = state.current
+    ? Number(state.xp[state.current.username] || state.current.xp || 0)
+    : 0;
+
+  container.innerHTML = [
+    { name: "First Steps", goal: 5 },
+    { name: "Getting Involved", goal: 25 },
+    { name: "Community Regular", goal: 50 },
+    { name: "Debate Legend", goal: 100 }
+  ].map(item => `
+    <p>${xp >= item.goal ? "🏆" : "🔒"}
+      <strong>${item.name}</strong>
+      <span class="muted"> — ${item.goal} XP</span>
+    </p>
+  `).join("");
+
+  const display = document.getElementById("xpDisplay");
+  if (display) display.textContent = xp + " XP";
+}
+
+function renderProfile() {
+  const container = document.getElementById("profileContent");
+  if (!container) return;
+
+  if (!state.current) {
+    container.innerHTML = `
+      <div class="card">
+        <h2>Welcome to DebateUs</h2>
+        <p>Create a local profile to publish debates and track your progress.</p>
+        <button class="btn btn-primary" id="profileSignIn">Create profile / Sign in</button>
+      </div>
+    `;
+    return;
+  }
+
+  const user = state.current;
+  const authored = state.debates.filter(debate => debate.author === user.username);
+  const xp = Number(state.xp[user.username] || user.xp || 0);
+
+  container.innerHTML = `
+    <div class="card">
+      <div class="profile-avatar">${escapeHTML(user.username.charAt(0).toUpperCase())}</div>
+      <h2>${escapeHTML(user.displayName || user.username)}</h2>
+      <p class="muted">@${escapeHTML(user.username)}</p>
+      <p>${escapeHTML(user.bio || "No bio added yet.")}</p>
+      <div class="stats-grid">
+        <div class="stat"><strong>${authored.length}</strong><span>Debates created</span></div>
+        <div class="stat"><strong>${xp}</strong><span>XP earned</span></div>
+        <div class="stat"><strong>${Object.keys(state.votes).length}</strong><span>Recorded votes</span></div>
+      </div>
+      <button class="btn btn-primary" data-edit-profile>Edit profile</button>
+      <button class="btn" data-sign-out>Sign out</button>
+    </div>
+    <section class="section">
+      <h2>Your debates</h2>
+      <div class="grid">
+        ${authored.length
+          ? authored.map(debateCard).join("")
+          : `<div class="empty-state">You haven't created a debate yet.</div>`}
+      </div>
+    </section>
+  `;
+
+  renderAchievements();
+}
+
+function saveProfile(event) {
+  event.preventDefault();
+
+  if (!state.current) return;
+
+  const displayName = document.getElementById("profileDisplayName").value.trim();
+  const bio = document.getElementById("profileBio").value.trim();
+
+  state.current.displayName = displayName || state.current.username;
+  state.current.bio = bio;
+
+  saveState();
+  document.getElementById("editProfileDialog")?.close();
+  renderProfile();
+
+  toast("Profile updated!");
+}
+
+document.getElementById("editProfileForm")?.addEventListener("submit", saveProfile);
+
+document.addEventListener("click", event => {
+  if (event.target.closest("#profileSignIn")) {
+    document.getElementById("authDialog")?.showModal();
+  }
+
+  if (event.target.closest("[data-edit-profile]")) {
+    if (!state.current) return;
+
+    document.getElementById("profileDisplayName").value =
+      state.current.displayName || state.current.username;
+
+    document.getElementById("profileBio").value = state.current.bio || "";
+
+    document.getElementById("editProfileDialog")?.showModal();
+  }
+});
+
+
+/* ---------- LEADERBOARD ---------- */
+
+function renderLeaderboard() {
+  const container = document.getElementById("leaderboardList");
+  if (!container) return;
+
+  const users = state.users.slice();
+
+  if (state.current && !users.some(user => user.username === state.current.username)) {
+    users.push(state.current);
+  }
+
+  users.sort((a, b) =>
+    Number(state.xp[b.username] || b.xp || 0) -
+    Number(state.xp[a.username] || a.xp || 0)
+  );
+
+  if (!users.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <h3>No leaderboard entries yet</h3>
+        <p>Create a profile and earn XP to appear here.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = users.map((user, index) => `
+    <article class="card leaderboard-row">
+      <strong>#${index + 1}</strong>
+      <span>${escapeHTML(user.displayName || user.username)}</span>
+      <strong>${Number(state.xp[user.username] || user.xp || 0)} XP</strong>
+    </article>
+  `).join("");
+}
+
+
+/* ---------- NOTIFICATIONS ---------- */
+
+function addNotification(message) {
+  state.notifications.push({
+    id: "notice-" + Date.now(),
+    message,
+    createdAt: Date.now(),
+    read: false
+  });
+
+  saveState();
+  renderNotifications();
+}
+
+function renderNotifications() {
+  const container = document.getElementById("notificationList");
+  if (!container) return;
+
+  if (!state.notifications.length) {
+    container.innerHTML = `<div class="empty-state">You're all caught up!</div>`;
+    return;
+  }
+
+  container.innerHTML = state.notifications.slice().reverse().map(item => `
+    <article class="card">
+      <p>${escapeHTML(item.message)}</p>
+      <span class="muted">${item.read ? "Read" : "New"} ·
+        ${new Date(item.createdAt).toLocaleString()}
+      </span>
+      ${item.read ? "" : `
+        <button class="btn btn-small" data-notification-read="${escapeHTML(item.id)}">
+          Mark as read
+        </button>`}
+    </article>
+  `).join("");
+}
+
+document.addEventListener("click", event => {
+  const button = event.target.closest("[data-notification-read]");
+  if (!button) return;
+
+  const item = state.notifications.find(note => note.id === button.dataset.notificationRead);
+  if (!item) return;
+
+  item.read = true;
+  saveState();
+  renderNotifications();
+});
+
+
+/* ---------- YOUTUBE WATCH HUB ---------- */
+
+function searchVideos() {
+  const input = document.getElementById("watchSearch");
+  const query = input?.value.trim();
+
+  if (!query) {
+    toast("Enter something to search for.");
+    return;
+  }
+
+  window.open(
+    "https://www.youtube.com/results?search_query=" + encodeURIComponent(query),
+    "_blank",
+    "noopener,noreferrer"
+  );
+}
+
+function embedVideo() {
+  const input = document.getElementById("watchUrl");
+  const container = document.getElementById("videoEmbed");
+
+  if (!input || !container) return;
+
+  let videoId = "";
+
+  try {
+    const url = new URL(input.value.trim());
+
+    if (url.hostname === "youtu.be") {
+      videoId = url.pathname.slice(1);
+    } else if (
+      url.hostname === "youtube.com" ||
+      url.hostname.endsWith(".youtube.com")
+    ) {
+      if (url.pathname === "/watch") {
+        videoId = url.searchParams.get("v") || "";
+      } else if (
+        url.pathname.startsWith("/embed/") ||
+        url.pathname.startsWith("/shorts/")
+      ) {
+        videoId = url.pathname.split("/")[2] || "";
+      }
+    }
+  } catch {
+    videoId = "";
+  }
+
+  if (!/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+    toast("Please enter a valid YouTube video link.");
+    return;
+  }
+
+  container.innerHTML = "";
+
+  const iframe = document.createElement("iframe");
+  iframe.src = "https://www.youtube-nocookie.com/embed/" + videoId;
+  iframe.title = "YouTube video player";
+  iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+  iframe.allowFullscreen = true;
+  iframe.referrerPolicy = "strict-origin-when-cross-origin";
+
+  container.appendChild(iframe);
+  container.hidden = false;
+}
+
+document.addEventListener("click", event => {
+  if (event.target.closest("[data-watch-search]")) searchVideos();
+  if (event.target.closest("[data-watch-embed]")) embedVideo();
+});
+
+
+/* ---------- SHARED CLOSE BUTTONS ---------- */
+
+document.addEventListener("click", event => {
+  const button = event.target.closest("[data-close]");
+  if (!button) return;
+
+  const dialog = document.getElementById(button.dataset.close);
+  if (dialog?.open) dialog.close();
+});
+
+
+/* ---------- INITIAL RENDER ---------- */
+
+function renderAllPages() {
+  renderAllCategoryFilters();
+  renderHome();
+  renderExplore();
+  renderDebates();
+  renderCommunity();
+  renderProfile();
+  renderAchievements();
+  renderLeaderboard();
+  renderNotifications();
+  renderTicTacToe();
+  startMemoryGame();
+  resetNumberGame();
+}
+
+renderAllPages();
+
+</script>
+<!-- PART 4 OF 4: ACCOUNT DIALOG, LIVE ARENA AND FINISHING CODE -->
+
+<div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+<dialog id="authDialog" class="app-dialog">
+  <div class="dialog-header">
+    <div>
+      <h2 id="authHeading">Join DebateUs</h2>
+      <p>Create a local demo profile or sign in to one on this browser.</p>
+    </div>
+    <button type="button" data-close="authDialog" aria-label="Close">✕</button>
+  </div>
+
+  <form id="authForm" class="dialog-form">
+    <label for="authUsername">Username</label>
+    <input id="authUsername" name="username" maxlength="24" required
+      autocomplete="username" placeholder="Choose a username">
+
+    <label for="authDisplayName">Display name</label>
+    <input id="authDisplayName" name="displayName" maxlength="40"
+      placeholder="What should people call you?">
+
+    <p class="muted">
+      Demo only: this doesn't create a secure online account or sync across devices.
+      Don't enter a real password.
+    </p>
+
+    <button type="submit" class="primary-button">Continue</button>
+  </form>
+</dialog>
+
+<script>
+/* ---------- PART 4: LOCAL DEMO ACCOUNTS ---------- */
+
+(function () {
+  "use strict";
+
+  const byId = id => document.getElementById(id);
+
+  function safeToast(message) {
+    if (typeof toast === "function") {
+      toast(message);
+      return;
+    }
+
+    const container = byId("toastContainer");
+    if (!container) {
+      alert(message);
+      return;
+    }
+
+    container.textContent = message;
+    container.classList.add("visible");
+    setTimeout(() => container.classList.remove("visible"), 2600);
+  }
+
+  function openDialog(id) {
+    const dialog = byId(id);
+    if (dialog && typeof dialog.showModal === "function" && !dialog.open) {
+      dialog.showModal();
+    }
+  }
+
+  function closeDialog(id) {
+    const dialog = byId(id);
+    if (dialog && dialog.open) dialog.close();
+  }
+
+  function getUsername() {
+    return typeof getCurrentUsername === "function"
+      ? getCurrentUsername()
+      : (state && state.current) || null;
+  }
+
+  function getUser() {
+    if (!state || !Array.isArray(state.users)) return null;
+    const username = getUsername();
+    return state.users.find(user =>
+      String(user.username).toLowerCase() === String(username || "").toLowerCase()
+    ) || null;
+  }
+
+  function refreshWebsite() {
+    if (typeof saveState === "function") saveState();
+    if (typeof renderAllPages === "function") renderAllPages();
+    if (typeof updateStats === "function") updateStats();
+  }
+
+  function updateAccountNavigation() {
+    const nav = byId("authNav");
+    if (!nav) return;
+
+    const user = getUser();
+
+    if (user) {
+      nav.textContent = "Sign out";
+      nav.setAttribute("aria-label", "Sign out of your demo profile");
+      nav.onclick = function (event) {
+        event.preventDefault();
+        state.current = null;
+        refreshWebsite();
+        updateAccountNavigation();
+        safeToast("You've signed out of this browser.");
+      };
+    } else {
+      nav.textContent = "Sign in";
+      nav.setAttribute("aria-label", "Sign in to DebateUs");
+      nav.onclick = function (event) {
+        event.preventDefault();
+        openDialog("authDialog");
+      };
+    }
+  }
+
+  const authForm = byId("authForm");
+
+  if (authForm) {
+    authForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      const usernameInput = byId("authUsername");
+      const displayInput = byId("authDisplayName");
+
+      const username = (usernameInput?.value || "")
+        .trim()
+        .replace(/\s+/g, "")
+        .slice(0, 24);
+
+      const displayName = (displayInput?.value || username)
+        .trim()
+        .slice(0, 40) || username;
+
+      if (!/^[a-zA-Z0-9_-]{2,24}$/.test(username)) {
+        safeToast("Use 2–24 letters, numbers, underscores or hyphens.");
+        return;
+      }
+
+      const existing = state.users.find(user =>
+        String(user.username).toLowerCase() === username.toLowerCase()
+      );
+
+      if (existing) {
+        state.current = existing.username;
+        safeToast("Welcome back, " + (existing.displayName || existing.username) + "!");
+      } else {
+        const newUser = {
+          username: username,
+          displayName: displayName,
+          bio: "",
+          joinedAt: new Date().toISOString(),
+          xp: 0,
+          achievements: [],
+          following: [],
+          followers: []
+        };
+
+        state.users.push(newUser);
+        state.current = username;
+        safeToast("Your demo profile is ready!");
+      }
+
+      refreshWebsite();
+      updateAccountNavigation();
+      closeDialog("authDialog");
+      authForm.reset();
+    });
+  }
+
+  /* ---------- LIVE ARENA: LOCAL ROOMS ---------- */
+
+  function getRooms() {
+    if (!state) return [];
+    if (!Array.isArray(state.live)) state.live = [];
+    return state.live;
+  }
+
+  function roomTitle(room) {
+    return room.title || room.topic || "Untitled debate";
+  }
+
+  function roomId(room) {
+    return String(room.id || room.roomId || "");
+  }
+
+  function renderRooms() {
+    const arenaPage = byId("page-arena");
+    const container =
+      byId("roomList") ||
+      byId("arenaRooms") ||
+      byId("liveRooms") ||
+      byId("roomsList");
+
+    if (!container && !arenaPage) return;
+
+    let target = container;
+
+    if (!target) {
+      target = document.createElement("section");
+      target.id = "generatedRoomList";
+      target.className = "room-list";
+      arenaPage.appendChild(target);
+    }
+
+    const rooms = getRooms();
+    target.replaceChildren();
+
+    const heading = document.createElement("h3");
+    heading.textContent = "Live Arena rooms";
+    target.appendChild(heading);
+
+    const intro = document.createElement("p");
+    intro.textContent =
+      "Create a room or join a room saved in this browser. These rooms aren't online multiplayer yet.";
+    target.appendChild(intro);
+
+    const createButton = document.createElement("button");
+    createButton.type = "button";
+    createButton.className = "primary-button";
+    createButton.textContent = "＋ Create a room";
+    createButton.addEventListener("click", createRoom);
+    target.appendChild(createButton);
+
+    if (!rooms.length) {
+      const empty = document.createElement("p");
+      empty.className = "muted";
+      empty.textContent = "No rooms yet. Create one to get started.";
+      target.appendChild(empty);
+      return;
+    }
+
+    rooms.forEach(room => {
+      const card = document.createElement("article");
+      card.className = "room-card";
+
+      const title = document.createElement("h4");
+      title.textContent = roomTitle(room);
+      card.appendChild(title);
+
+      const details = document.createElement("p");
+      details.textContent =
+        "Host: " + (room.host || "Unknown") +
+        " · " + (room.status || "Waiting for challenger");
+      card.appendChild(details);
+
+      if (room.challenger) {
+        const challenger = document.createElement("p");
+        challenger.textContent = "Challenger: " + room.challenger;
+        card.appendChild(challenger);
+      }
+
+      const joinButton = document.createElement("button");
+      joinButton.type = "button";
+      joinButton.textContent = room.challenger ? "View room" : "Join as challenger";
+      joinButton.addEventListener("click", () => joinRoom(roomId(room)));
+      card.appendChild(joinButton);
+
+      if (room.host === getUsername()) {
+        const endButton = document.createElement("button");
+        endButton.type = "button";
+        endButton.textContent = "End room";
+        endButton.addEventListener("click", () => endRoom(roomId(room)));
+        card.appendChild(endButton);
+      }
+
+      target.appendChild(card);
+    });
+  }
+
+  function createRoom() {
+    const username = getUsername();
+
+    if (!username) {
+      openDialog("authDialog");
+      safeToast("Create a demo profile before hosting a room.");
+      return;
+    }
+
+    const title = prompt("What should this live debate be about?");
+    if (title === null) return;
+
+    const cleanTitle = title.trim().slice(0, 100);
+    if (cleanTitle.length < 3) {
+      safeToast("Enter a topic with at least 3 characters.");
+      return;
+    }
+
+    const rooms = getRooms();
+    const room = {
+      id: "room-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+      title: cleanTitle,
+      host: username,
+      challenger: null,
+      status: "Waiting for challenger",
+      createdAt: new Date().toISOString()
+    };
+
+    rooms.unshift(room);
+    refreshWebsite();
+    renderRooms();
+    safeToast("Your room has been created on this browser.");
+  }
+
+  function joinRoom(id) {
+    const username = getUsername();
+
+    if (!username) {
+      openDialog("authDialog");
+      safeToast("Sign in with a demo profile before joining.");
+      return;
+    }
+
+    const room = getRooms().find(item => roomId(item) === id);
+    if (!room) {
+      safeToast("That room could not be found.");
+      renderRooms();
+      return;
+    }
+
+    if (room.host === username) {
+      safeToast("You're hosting this room.");
+      return;
+    }
+
+    if (room.challenger && room.challenger !== username) {
+      safeToast("This room already has a challenger.");
+      return;
+    }
+
+    room.challenger = username;
+    room.status = "Ready to begin";
+    refreshWebsite();
+    renderRooms();
+    safeToast("You've joined the room as challenger.");
+  }
+
+  function endRoom(id) {
+    const username = getUsername();
+    const room = getRooms().find(item => roomId(item) === id);
+
+    if (!room || room.host !== username) {
+      safeToast("Only the host can end this room.");
+      return;
+    }
+
+    if (!confirm("End this live room?")) return;
+
+    state.live = getRooms().filter(item => roomId(item) !== id);
+    refreshWebsite();
+    renderRooms();
+    safeToast("Room ended.");
+  }
+
+  /* ---------- GENERAL CLEANUP ---------- */
+
+  document.addEventListener("click", function (event) {
+    const closeButton = event.target.closest("[data-close]");
+    if (closeButton) {
+      closeDialog(closeButton.dataset.close);
+    }
+  });
+
+  document.querySelectorAll("dialog").forEach(dialog => {
+    dialog.addEventListener("click", function (event) {
+      if (event.target === dialog) dialog.close();
+    });
+  });
+
+  // Make the Live Arena renderer available to the Part 3 navigation code.
+  window.renderRooms = renderRooms;
+
+  updateAccountNavigation();
+  renderRooms();
+
+  // Keep the sign-in button and profile display in sync when navigation changes.
+  document.addEventListener("click", function () {
+    updateAccountNavigation();
+  });
+})();
+</script>
+
+</body>
+</html>
