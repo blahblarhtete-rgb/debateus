@@ -883,7 +883,7 @@ footer strong {
     </nav>
 
     <div class="header-actions">
-      <button type="button" class="btn btn-small" id="authOpen" onclick="document.getElementById(\'authDialog\').showModal()">Sign in</button>
+      <button type="button" class="btn btn-small" id="authOpen">Sign in</button>
       <button class="btn btn-primary btn-small" data-action="new-debate">+ Debate</button>
     </div>
   </div>
@@ -3080,28 +3080,33 @@ renderAllPages();
   function updateAccountNavigation() {
     const nav = byId("authOpen");
     if (!nav) return;
-
     const user = getUser();
-
-    if (user) {
-      nav.textContent = "Sign out";
-      nav.setAttribute("aria-label", "Sign out of your demo profile");
-      nav.onclick = function (event) {
-        event.preventDefault();
-        state.current = null;
-        refreshWebsite();
-        updateAccountNavigation();
-        safeToast("You've signed out of this browser.");
-      };
-    } else {
-      nav.textContent = "Sign in";
-      nav.setAttribute("aria-label", "Sign in to DebateUs");
-      nav.onclick = function (event) {
-        event.preventDefault();
-        openDialog("authDialog");
-      };
-    }
+    nav.textContent = user ? "Sign out" : "Sign in";
+    nav.setAttribute("aria-label", user
+      ? "Sign out of your demo profile"
+      : "Sign in to DebateUs");
   }
+
+  // One click handler controls both sign-in and sign-out.
+  const accountButton = byId("authOpen");
+  accountButton?.addEventListener("click", function (event) {
+    event.preventDefault();
+    if (getUser()) {
+      state.current = null;
+      refreshWebsite();
+      updateAccountNavigation();
+      safeToast("You have signed out of this browser.");
+    } else {
+      openDialog("authDialog");
+    }
+  });
+
+  // Refresh the profile view whenever the Profile tab is selected.
+  document.addEventListener("click", function (event) {
+    if (event.target.closest('[data-page="profile"]') && typeof renderProfile === "function") {
+      renderProfile();
+    }
+  });
 
   const authForm = byId("authForm");
 
